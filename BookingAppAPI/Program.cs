@@ -25,7 +25,7 @@ builder.Services.AddCors(Options =>
                 .AllowAnyMethod();
         });
 });
-
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(10));
 
 // Add services to the container.
@@ -90,5 +90,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.UseCors(MyAllowSpecificOrigins);
 
-
+app.MapControllerRoute(
+     name: "default",
+        pattern: "{controller=Content}/{action=Services}/{id?}");
 app.Run();

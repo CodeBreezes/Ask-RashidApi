@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookingAppAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250702152542_ServicesAdded")]
-    partial class ServicesAdded
+    [Migration("20250713134150__intialSetup")]
+    partial class _intialSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,44 @@ namespace BookingAppAPI.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("BookingAppAPI.DB.Booking", b =>
+                {
+                    b.Property<int>("UniqueId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UniqueId"));
+
+                    b.Property<DateTime?>("EndedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("StartedDate")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly>("StartedTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Topic")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UniqueId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Booking");
+                });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Address.City", b =>
                 {
@@ -84,6 +122,65 @@ namespace BookingAppAPI.Migrations
                     b.HasIndex("CountryId");
 
                     b.ToTable("States");
+                });
+
+            modelBuilder.Entity("BookingAppAPI.DB.Models.Bulletins", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastUpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubtopicId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubtopicId");
+
+                    b.ToTable("Bulletins");
+                });
+
+            modelBuilder.Entity("BookingAppAPI.DB.Models.Subtopics", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastUpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("Subtopics");
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.User.AppUser", b =>
@@ -184,11 +281,6 @@ namespace BookingAppAPI.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -204,52 +296,25 @@ namespace BookingAppAPI.Migrations
                     b.HasKey("UniqueId");
 
                     b.ToTable("Services");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            UniqueId = 1,
-                            Cost = 1000,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Test Data Description for Services You will like to enrole with.",
-                            ImagePath = "",
-                            IsActive = true,
-                            LastUpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Service 1"
-                        },
-                        new
-                        {
-                            UniqueId = 2,
-                            Cost = 1000,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Test Data Description for Services You will like to enrole with.",
-                            ImagePath = "",
-                            IsActive = true,
-                            LastUpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Service 2"
-                        },
-                        new
-                        {
-                            UniqueId = 3,
-                            Cost = 1000,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Test Data Description for Services You will like to enrole with.",
-                            ImagePath = "",
-                            IsActive = true,
-                            LastUpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Service 3"
-                        },
-                        new
-                        {
-                            UniqueId = 4,
-                            Cost = 1000,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Test Data Description for Services You will like to enrole with.",
-                            ImagePath = "",
-                            IsActive = true,
-                            LastUpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Service 4"
-                        });
+            modelBuilder.Entity("BookingAppAPI.DB.Booking", b =>
+                {
+                    b.HasOne("BookingAppAPI.DB.Services", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookingAppAPI.DB.Models.User.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Address.City", b =>
@@ -272,6 +337,38 @@ namespace BookingAppAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("BookingAppAPI.DB.Models.Bulletins", b =>
+                {
+                    b.HasOne("BookingAppAPI.DB.Models.Subtopics", "Subtopic")
+                        .WithMany("Bulletins")
+                        .HasForeignKey("SubtopicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subtopic");
+                });
+
+            modelBuilder.Entity("BookingAppAPI.DB.Models.Subtopics", b =>
+                {
+                    b.HasOne("BookingAppAPI.DB.Services", "Service")
+                        .WithMany("Subtopics")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("BookingAppAPI.DB.Models.Subtopics", b =>
+                {
+                    b.Navigation("Bulletins");
+                });
+
+            modelBuilder.Entity("BookingAppAPI.DB.Services", b =>
+                {
+                    b.Navigation("Subtopics");
                 });
 #pragma warning restore 612, 618
         }

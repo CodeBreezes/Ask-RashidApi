@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
+using BookingAppAPI.ViewModels;
 
 namespace BookingAppAPI.Controllers
 {
@@ -75,12 +76,29 @@ namespace BookingAppAPI.Controllers
         // POST: api/Bookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Booking>> PostBooking(Booking booking)
+        public async Task<ActionResult<Booking>> PostBooking(BookingViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Map ViewModel to Booking entity
+            var booking = new Booking
+            {
+                ServiceId = model.ServiceId,
+                UserId = model.UserId,
+                StartedDate = model.StartedDate,
+                StartedTime = model.StartedTime,
+                EndedDate = null  ,
+                Notes=model.Notes,
+                Topic=model.Topic
+            };
+
             _context.Booking.Add(booking);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetBooking", new { id = booking.UniqueId }, booking);
+            return CreatedAtAction(nameof(GetBooking), new { id = booking.UniqueId }, booking);
         }
 
         // DELETE: api/Bookings/5

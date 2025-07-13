@@ -2,6 +2,7 @@
 using BookingAppAPI.DB.Models.User;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
+using BookingAppAPI.DB.Models;
 
 namespace BookingAppAPI.DB
 {
@@ -11,7 +12,6 @@ namespace BookingAppAPI.DB
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.EngagementRoles();
-            modelBuilder.SeedServices();
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -26,6 +26,9 @@ namespace BookingAppAPI.DB
         public DbSet<City> Cities { get; set; }
 
         public DbSet<Services> Services { get; set; }
+        public DbSet<Subtopics> Subtopics { get; set; }
+        public DbSet<Bulletins> Bulletins { get; set; }
+
         public DbSet<BookingAppAPI.DB.Booking> Booking { get; set; } = default!;
 
     }

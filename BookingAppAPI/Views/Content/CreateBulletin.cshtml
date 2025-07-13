@@ -1,0 +1,35 @@
+﻿@model BookingAppAPI.DB.Models.Bulletins
+@{
+    ViewData["Title"] = "Create Bulletin";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4>Create Bulletin</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateBulletin" method="post">
+                        <input type="hidden" asp-for="SubtopicId" value="@ViewBag.SubtopicId" />
+
+                        <div class="mb-3">
+                            <label asp-for="Content" class="form-label">Content</label>
+                            <textarea asp-for="Content" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Content" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OrderIndex" class="form-label">Order</label>
+                            <input asp-for="OrderIndex" class="form-control" type="number" />
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Save Bulletin</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

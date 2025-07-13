@@ -15,9 +15,9 @@ namespace Bpst.API.Services.UserAccount
         private readonly IConfiguration _config = config;
         private object _httpContextAccessor;
 
-        public async Task<bool> IfUserExists(string email)
+        public async Task<bool> IfUserExists(string PhoneNumber)
         {
-            var user = await _context.AppUsers.AnyAsync(u => u.LoginEmail.Equals(email));
+            var user = await _context.AppUsers.AnyAsync(u => u.PhoneNumber.Equals(PhoneNumber));
             return user;
         }
         public async Task<AppUser> GetUserByEmail(string email)
@@ -32,13 +32,25 @@ namespace Bpst.API.Services.UserAccount
             }
             return null;
         }
+        public async Task<AppUser> GetLoginUser(string phoneOrEmail)
+        {
+            try
+            {
+                return await _context.AppUsers.Where(u => u.LoginEmail.Equals(phoneOrEmail)  ||  u.PhoneNumber.Equals(phoneOrEmail)).FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+            }
+            return null;
+        }
         public async Task<UserRegistrationResponse> RegisterNewUserAsync(UserRegistrationVM user)
         {
             var response = new UserRegistrationResponse() { };
 
-            if (await IfUserExists(user.Email))
+            if (await IfUserExists(user.PhoneNumber))
             {
-                response.ErrorMessages = new List<string>() { "User already exist with given Id, please try with different email" };
+                response.ErrorMessages = new List<string>() { "User already exist with given Phone Number, please try with different Phone Number" };
                 return response;
             }
             else
@@ -77,7 +89,7 @@ namespace Bpst.API.Services.UserAccount
         public async Task<LoginResponse> Login(LoginVM login)
         {
             var response = new LoginResponse();
-            var _appUser = await GetUserByEmail(login.LoginName);
+            var _appUser = await GetLoginUser(login.LoginName);
             if (_appUser != null)
             {
                 response = ValidateCredentials(_appUser, login.Password);
@@ -121,7 +133,7 @@ namespace Bpst.API.Services.UserAccount
         }
         private async Task PopulateLoginResponse(LoginResponse response, string loginName)
         {
-            var _appUser = await GetUserByEmail(loginName);
+            var _appUser = await GetLoginUser(loginName);
             response.IsLoginSuccess = true;
             response.FName = _appUser.FirstName;
             response.LName = _appUser.LastName;

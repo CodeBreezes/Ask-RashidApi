@@ -27,6 +27,13 @@ namespace BookingAppAPI.Controllers
             return await _context.Services.ToListAsync();
         }
 
+        [HttpGet]
+        [Route("api/services")]
+        public IActionResult GetAllServices()
+        {
+            var services = _context.Services.Include(s => s.Subtopics).ThenInclude(st => st.Bulletins).ToList();
+            return Ok(services);
+        }
         // GET: api/Services/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Services>> GetServices(int id)

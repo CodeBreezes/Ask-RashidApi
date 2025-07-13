@@ -14,15 +14,7 @@ namespace BookingAppAPI.DB
                 );
         }
 
-        public static void SeedServices(this ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Services>().HasData(
-                new Services() { UniqueId = 1, Cost = 1000, Name = "Service 1", Description="Test Data Description for Services You will like to enrole with.", },
-                new Services() { UniqueId = 2, Cost = 1000, Name = "Service 2", Description="Test Data Description for Services You will like to enrole with.", },
-                new Services() { UniqueId = 3, Cost = 1000, Name = "Service 3", Description="Test Data Description for Services You will like to enrole with.", },
-                new Services() { UniqueId = 4, Cost = 1000, Name = "Service 4", Description="Test Data Description for Services You will like to enrole with.", }
-                 );
-        }
+        
 
         public static void SeedCountry(this ModelBuilder modelBuilder)
         {
