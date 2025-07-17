@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace BookingAppAPI.DB.Models
 {
@@ -14,6 +15,7 @@ namespace BookingAppAPI.DB.Models
 
         public int SubtopicId { get; set; }
         [ForeignKey("SubtopicId")]
+        [JsonIgnore]
         public Subtopics? Subtopic { get; set; } 
 
         public DateTime CreatedDate { get; set; }

@@ -68,7 +68,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
-             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConStr")));
+             options.UseSqlServer(builder.Configuration.GetConnectionString("LiveConStr")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();

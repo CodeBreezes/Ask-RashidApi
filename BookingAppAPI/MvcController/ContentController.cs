@@ -112,5 +112,48 @@ namespace BookingAppAPI.Controllers
             ViewBag.SubtopicId = model.SubtopicId;
             return View(model);
         }
+        [HttpGet]
+        public IActionResult ManageService()
+        {
+            return View(new ServiceFullViewModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ManageService(ServiceFullViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var service = new Services
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    Cost = model.Cost,
+                    CreatedDate = DateTime.Now,
+                    LastUpdatedDate = DateTime.Now,
+                    IsActive = true,
+                    Subtopics = model.Subtopics.Select(st => new Subtopics
+                    {
+                        Title = st.Title,
+                        CreatedDate = DateTime.Now,
+                        LastUpdatedDate = DateTime.Now,
+                        Bulletins = st.Bulletins.Select(b => new Bulletins
+                        {
+                            Content = b.Content,
+                            OrderIndex = b.OrderIndex,
+                            CreatedDate = DateTime.Now,
+                            LastUpdatedDate = DateTime.Now
+                        }).ToList()
+                    }).ToList()
+                };
+
+                _context.Services.Add(service);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction("Services");
+            }
+
+            return View(model);
+        }
+
     }
 }

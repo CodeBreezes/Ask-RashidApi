@@ -28,11 +28,22 @@ namespace BookingAppAPI.Controllers
         }
 
         [HttpGet]
-        [Route("api/services")]
-        public IActionResult GetAllServices()
+        [Route("api/services/GetAllServices")]
+        public async Task<ActionResult<IEnumerable<Services>>> GetAllServices()
         {
-            var services = _context.Services.Include(s => s.Subtopics).ThenInclude(st => st.Bulletins).ToList();
-            return Ok(services);
+            try
+            {
+                var services = await _context.Services
+                    .Include(s => s.Subtopics)
+                    .ThenInclude(st => st.Bulletins)
+                    .ToListAsync();
+
+                return Ok(services);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
         // GET: api/Services/5
         [HttpGet("{id}")]
