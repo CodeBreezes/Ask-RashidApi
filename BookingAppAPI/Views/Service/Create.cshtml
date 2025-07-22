@@ -1,0 +1,141 @@
+﻿@model BookingAppAPI.DB.Services
+
+@{
+    ViewData["Title"] = "Create Service";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-sm rounded">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Create New Service</h4>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Create" class="needs-validation" novalidate>
+                <input asp-for="UniqueId" type="hidden" class="form-control" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label asp-for="Name" class="form-label fw-semibold">Service Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="Enter service name" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                        <input asp-for="Description" class="form-control" placeholder="Enter description" />
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="Cost" class="form-label fw-semibold">Cost</label>
+                        <input asp-for="Cost" class="form-control" placeholder="Enter cost" />
+                        <span asp-validation-for="Cost" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" asp-for="IsActive" />
+                            <label class="form-check-label fw-semibold" asp-for="IsActive">Is Active</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4">💾 Save Service</button>
+                </div>
+
+                @if (Model.Subtopics?.Count > 0)
+                {
+                    <hr class="my-5" />
+                    <h5 class="text-secondary border-bottom pb-2 mb-3">Subtopics <span class="badge bg-info">@Model.Subtopics.Count</span></h5>
+
+                    @foreach (var subtopic in Model.Subtopics)
+                    {
+                        <div class="border rounded p-3 mb-4 bg-light-subtle">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Title</label>
+                                    <input asp-for="@subtopic.Title" class="form-control" placeholder="Subtopic title" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Linked Service</label>
+                                    <input asp-for="@subtopic.Service.Name" class="form-control" disabled />
+                                </div>
+
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-success w-100" onclick="toggleBulletin(this)">➕ Add Bulletins</button>
+                                </div>
+
+                                <div class="bulletin-form row g-3 mb-2 ps-2 border-start border-2 border-info mt-2 d-none">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Bulletin Content</label>
+                                        <input name="NewBulletins[][Content]" class="form-control" placeholder="Enter bulletin" />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Order</label>
+                                        <input name="NewBulletins[][OrderIndex]" class="form-control" placeholder="Index" />
+                                    </div>
+
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-danger w-100">💾 Save</button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            @if (subtopic.Bulletins?.Count > 0)
+                            {
+                                <div class="mt-4">
+                                    <h6 class="mb-3">📌 Bulletins <span class="badge bg-secondary">@subtopic.Bulletins.Count</span></h6>
+
+                                    @foreach (var bulletin in subtopic.Bulletins)
+                                    {
+                                        <div class="row g-3 mb-2 ps-2 border-start border-2 border-info">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Bulletin Content</label>
+                                                <input asp-for="@bulletin.Content" class="form-control" placeholder="Enter bulletin" />
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label class="form-label">Order</label>
+                                                <input asp-for="@bulletin.OrderIndex" class="form-control" placeholder="Index" />
+                                            </div>
+
+                                            <div class="col-md-4 d-flex align-items-end">
+                                                <button type="button" class="btn btn-outline-danger w-100">❌ Remove Bulletin</button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </form>
+
+            <div class="mt-4">
+                <a asp-action="Index" class="btn btn-link">← Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function toggleBulletin(button) {
+        const container = button.closest('.row').parentElement;
+        const hiddenBulletinForm = container.querySelector('.bulletin-form');
+
+        if (hiddenBulletinForm) {
+            hiddenBulletinForm.classList.toggle('d-none');
+        }
+    }
+</script>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

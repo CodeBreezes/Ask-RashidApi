@@ -1,4 +1,5 @@
 using BookingAppAPI.DB;
+using BookingAppAPI.DB.Models;
 using Bpst.API.Services.UserAccount;
 using Bpst.API.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Stripe;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Text;
@@ -14,7 +16,6 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
 builder.Services.AddCors(Options =>
 {
     Options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -72,9 +73,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 
 var app = builder.Build();
+var stripeSettings = app.Services.GetRequiredService<IConfiguration>()
+                                 .GetSection("Stripe")
+                                 .Get<StripeSettings>();
 
+StripeConfiguration.ApiKey = stripeSettings.SecretKey;
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -85,6 +91,7 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapControllers();

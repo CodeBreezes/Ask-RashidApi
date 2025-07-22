@@ -14,6 +14,6 @@ namespace BookingAppAPI.DB
         public DateTime CreatedDate { get; set; }
         public DateTime LastUpdatedDate { get; set; } 
         public bool IsActive { get; set; } = true;
-        public ICollection<Subtopics> Subtopics { get; set; } = new List<Subtopics>();
+        public List<Subtopics> Subtopics { get; set; } = new List<Subtopics>();
     }
 }
