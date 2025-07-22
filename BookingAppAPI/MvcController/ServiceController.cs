@@ -47,133 +47,110 @@ namespace BookingAppAPI.MvcController
 
         // GET: Service/Create
 
-        public async Task<IActionResult> Create(int id)
+        // GET: Create or Edit Service
+        public async Task<IActionResult> Create(int id = 0)
         {
-            var service = await _context.Services.Include(s => s.Subtopics).ThenInclude(st => st.Bulletins).FirstOrDefaultAsync(s => s.UniqueId == id);
-            if (service == null)     
-                service = new Services()
-                {
-                    Subtopics = new List<Subtopics>()
-                    {
+            Services service = null;
 
-                        new Subtopics() 
+            if (id != 0)
+            {
+                // Try to load existing service (for update)
+                service = await _context.Services
+                    .Include(s => s.Subtopics)
+                        .ThenInclude(st => st.Bulletins)
+                    .FirstOrDefaultAsync(s => s.UniqueId == id);
+            }
+
+            if (service == null)
+            {
+                // Create new default service if not found
+                service = new Services
+                {
+                    Subtopics = new List<Subtopics>
+            {
+                new Subtopics
+                {
+                    Title = "General Information",
+                    CreatedDate = DateTime.Now,
+                    LastUpdatedDate = DateTime.Now,
+                    Bulletins = new List<Bulletins>
+                    {
+                        new Bulletins
                         {
-                           Bulletins = new List<Bulletins>()
-                           {
-                               new Bulletins()
-                               {
-                                   Content = "Welcome to the service!",
-                                   CreatedDate = DateTime.Now,
-                                   LastUpdatedDate = DateTime.Now
-                               }
-                           },CreatedDate = DateTime.Now, LastUpdatedDate = DateTime.Now,Id = 0, Title = "General Information"
+                            Content = "Welcome to the service!",
+                            CreatedDate = DateTime.Now,
+                            LastUpdatedDate = DateTime.Now
                         }
                     }
+                }
+            }
                 };
+            }
+
             return View(service);
         }
 
-
+        // POST: Create or Update Service
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Services services)
         {
             if (ModelState.IsValid)
             {
-                if (services.UniqueId.Equals(0))
+                if (services.UniqueId == 0)
                 {
+                    // New service
                     _context.Add(services);
                 }
                 else
                 {
+                    // Update existing service
                     _context.Update(services);
                 }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             return View(services);
         }
 
         // GET: Service/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var services = await _context.Services.FindAsync(id);
-            if (services == null)
-            {
-                return NotFound();
-            }
-            return View(services);
-        }
 
-        
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UniqueId,Name,Description,Cost,CreatedDate,LastUpdatedDate,IsActive")] Services services)
-        {
-            if (id != services.UniqueId)
-            {
-                return NotFound();
-            }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(services);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ServicesExists(services.UniqueId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(services);
-        }
-
+        // GET: Services/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var services = await _context.Services
+            var service = await _context.Services
                 .FirstOrDefaultAsync(m => m.UniqueId == id);
-            if (services == null)
-            {
-                return NotFound();
-            }
 
-            return View(services);
+            if (service == null)
+                return NotFound();
+
+            return View(service);
         }
 
-        // POST: Service/Delete/5
+        // POST: Services/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var services = await _context.Services.FindAsync(id);
-            if (services != null)
+            var service = await _context.Services.FindAsync(id);
+            if (service != null)
             {
-                _context.Services.Remove(services);
+                _context.Services.Remove(service);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+
+
 
         private bool ServicesExists(int id)
         {

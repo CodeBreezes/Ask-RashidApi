@@ -3,9 +3,11 @@
 @{
     ViewData["Title"] = "Create Service";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.ActiveTabName = "Services"; // or "SessionYear", "FeeTypes", etc.
+
 }
 
-<div class="container mt-5">
+<div class="container mt-0">
     <div class="card shadow-sm rounded">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Create New Service</h4>
@@ -90,7 +92,7 @@
 
                             @if (subtopic.Bulletins?.Count > 0)
                             {
-                                <div class="mt-4">
+                                <div class="mt-3">
                                     <h6 class="mb-3">📌 Bulletins <span class="badge bg-secondary">@subtopic.Bulletins.Count</span></h6>
 
                                     @foreach (var bulletin in subtopic.Bulletins)
@@ -118,7 +120,7 @@
                 }
             </form>
 
-            <div class="mt-4">
+            <div class="mt-3">
                 <a asp-action="Index" class="btn btn-link">← Back to List</a>
             </div>
         </div>
