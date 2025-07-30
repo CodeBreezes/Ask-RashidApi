@@ -1,0 +1,126 @@
+﻿@model IEnumerable<BookingAppAPI.DB.Booking>
+
+@{
+    ViewData["Title"] = "All Bookings";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.ActiveTabName = "Booking";
+}
+
+<div class="content px-1">
+    <div class="card shadow rounded-1">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-1">
+            <h4 class="mb-0">All Bookings</h4>
+            <a asp-action="Create" class="btn btn-light btn-sm shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Booking
+            </a>
+        </div>
+
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row mb-4 g-2">
+                <div class="col-md-2">
+                    <select name="filter" id="filterOption" class="form-select">
+                        <option value="">All</option>
+                        <option value="today" selected="@(ViewBag.Filter == "today")">Today</option>
+                        <option value="thisWeek" selected="@(ViewBag.Filter == "thisWeek")">This Week</option>
+                        <option value="lastMonth" selected="@(ViewBag.Filter == "lastMonth")">Last Month</option>
+                        <option value="thisYear" selected="@(ViewBag.Filter == "thisYear")">This Year</option>
+                        <option value="custom" selected="@(ViewBag.Filter == "custom")">Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 custom-range @(ViewBag.Filter == "custom" ? "" : "d-none")">
+                    <input type="date" name="startDate" class="form-control"
+                           value="@(ViewBag.StartDate != null ? ((DateTime)ViewBag.StartDate).ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-3 custom-range @(ViewBag.Filter == "custom" ? "" : "d-none")">
+                    <input type="date" name="endDate" class="form-control"
+                           value="@(ViewBag.EndDate != null ? ((DateTime)ViewBag.EndDate).ToString("yyyy-MM-dd") : "")" />
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                </div>
+
+                <div class="col-12 mt-1">
+                    <a href="@Url.Action("Index")" class="btn btn-link text-danger p-0">Reset Filter</a>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="tblBookings">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Topic</th>
+                            <th>Notes</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int count = 1;
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@count</td>
+                                    <td>@item.Service?.Name</td>
+                                    <td>@item.StartedDate.ToString("dd MMM yyyy")</td>
+                                    <td>@item.StartedTime.ToString(@"hh\:mm")</td>
+                                    <td>@item.Topic</td>
+                                    <td>@item.Notes</td>
+                                    <td class="text-end">
+                                        <a asp-action="Create" asp-route-id="@item.UniqueId">
+                                            <i class="fa fa-edit text-primary "></i>
+                                        </a>
+                                        <a asp-action="Details" asp-route-id="@item.UniqueId">
+                                            <i class="fa fa-eye text-success "></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.UniqueId">
+                                            <i class="fa fa-trash text-danger "></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                count++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Required Styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <!-- Required Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#tblBookings').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "searching": true
+            });
+
+            document.getElementById("filterOption").addEventListener("change", function () {
+                const value = this.value;
+                const customRangeElements = document.querySelectorAll(".custom-range");
+                if (value === "custom") {
+                    customRangeElements.forEach(el => el.classList.remove("d-none"));
+                } else {
+                    customRangeElements.forEach(el => el.classList.add("d-none"));
+                }
+            });
+        });
+    </script>
+}

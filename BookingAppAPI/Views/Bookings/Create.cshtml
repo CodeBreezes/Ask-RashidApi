@@ -1,0 +1,70 @@
+﻿@model BookingAppAPI.ViewModels.BookingViewModel
+
+@{
+    ViewData["Title"] = ViewBag.BookingId == null ? "Create Booking" : "Edit Booking";
+    var services = ViewBag.Services as List<BookingAppAPI.DB.Services>;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.activeTabName = "Booking";
+}
+
+<div class="content ">
+    <div class="card shadow rounded-1">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-1">
+            <h4 class="mb-0">
+                <i class="bi bi-calendar-plus me-2"></i> @ViewData["Title"]
+            </h4>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                @if (ViewBag.BookingId != null)
+                {
+                    <input type="hidden" name="id" value="@ViewBag.BookingId" />
+                }
+
+                <div class="mb-3">
+                    <label asp-for="ServiceId" class="form-label">Service</label>
+                    <select asp-for="ServiceId" class="form-select" asp-items="@(new SelectList(services, "UniqueId", "Name"))">
+                        <option value="">-- Select Service --</option>
+                    </select>
+                    <span asp-validation-for="ServiceId" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StartedDate" class="form-label">Date</label>
+                    <input asp-for="StartedDate" type="date" class="form-control" />
+                    <span asp-validation-for="StartedDate" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StartedTime" class="form-label">Time</label>
+                    <input asp-for="StartedTime" type="time" class="form-control" />
+                    <span asp-validation-for="StartedTime" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Topic" class="form-label">Topic</label>
+                    <input asp-for="Topic" class="form-control" placeholder="e.g. Consultation, Training..." />
+                    <span asp-validation-for="Topic" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label">Notes</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Additional details..."></textarea>
+                    <span asp-validation-for="Notes" class="text-danger small"></span>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-save me-1"></i> Save Booking
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

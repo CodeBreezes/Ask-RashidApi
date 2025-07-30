@@ -39,7 +39,8 @@
             transition: transform 0.3s ease-in-out;
         }
 
-            .sidebar.hide {
+            .sidebar.hide
+            {
                 transform: translateX(-100%);
             }
 
@@ -62,7 +63,8 @@
             color: #888;
         }
 
-        .sidebar-menu .nav-link {
+        .sidebar-menu .nav-link
+        {
             color: #888;
             padding: 12px 15px;
             border-radius: 6px;
@@ -144,7 +146,6 @@
         /* Responsive */
         @@media (max-width: 991.98px) {
             .sidebar
-
         {
             transform: translateX(-100%);
             position: fixed;
@@ -178,11 +179,9 @@
                 <div class="sidebar-subtitle">Administrator</div>
             </div>
         </div>
-
         @{
             var activeTabName = ViewBag.ActiveTabName as string ?? "";
         }
-
         <div class="sidebar-menu flex-grow-1">
             <ul class="nav flex-column">
                 <li class="nav-item">
@@ -199,6 +198,18 @@
                     <a href="/Admin/Inquiry" class="nav-link @(activeTabName == "Inquiry" ? "active" : "")">
                         <i class="fas fa-envelope"></i> User Inquiry
                     </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/Bookings/Index" class="nav-link @(activeTabName == "Booking" ? "active" : "")">
+                        <i class="fas fa-envelope"></i>All Booking 
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/Bookings/Payment" class="nav-link @(activeTabName == "Inquiry" ? "active" : "")">
+                        <i class="fas fa-envelope"></i>Payment Status
+                        </a>
                 </li>
             </ul>
         </div>

@@ -13,10 +13,10 @@ namespace BookingAppAPI.DB
         [ForeignKey("ServiceId")]
         public Services Service { get; set; } = null!;
 
-        public int UserId { get; set; }
-        [ForeignKey("UserId")]
+        //public int UserId { get; set; }
+        //[ForeignKey("UserId")]
 
-        public AppUser User { get; set; } = null!;
+        //public AppUser User { get; set; } = null!;
         public DateOnly StartedDate { get; set; }
         public TimeOnly StartedTime { get; set; }
         public DateTime? EndedDate { get; set; }
