@@ -87,7 +87,7 @@ namespace BookingAppAPI.Controllers
             var booking = new Booking
             {
                 ServiceId = model.ServiceId,
-                UserId = model.UserId,
+               
                 StartedDate = model.StartedDate,
                 StartedTime = model.StartedTime,
                 EndedDate = null  ,

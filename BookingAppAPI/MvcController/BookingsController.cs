@@ -16,10 +16,11 @@ namespace BookingAppAPI.MvcController
         }
 
         // GET: Booking
-        public IActionResult Index(string filter, DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> Index(string filter, DateTime? startDate, DateTime? endDate)
         {
             var bookings = _context.Booking
                 .Include(b => b.Service)
+                .Include(b => b.User)
                 .AsQueryable();
 
             var today = DateOnly.FromDateTime(DateTime.Today);
@@ -29,20 +30,22 @@ namespace BookingAppAPI.MvcController
                 case "today":
                     bookings = bookings.Where(b => b.StartedDate == today);
                     break;
+
                 case "thisWeek":
-                    var startOfWeek = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek));
-                    bookings = bookings.Where(b => b.StartedDate >= startOfWeek && b.StartedDate <= today);
+                    var startOfWeek = DateOnly.FromDateTime(DateTime.Today.AddDays(-7));
+                    bookings = bookings.Where(b => b.StartedDate >= startOfWeek);
                     break;
-                case "lastMonth":
-                    var lastMonth = DateTime.Today.AddMonths(-1);
-                    var lastMonthStart = DateOnly.FromDateTime(new DateTime(lastMonth.Year, lastMonth.Month, 1));
-                    var lastMonthEnd = lastMonthStart.AddMonths(1).AddDays(-1);
-                    bookings = bookings.Where(b => b.StartedDate >= lastMonthStart && b.StartedDate <= lastMonthEnd);
+
+                case "thisMonth":
+                    var startOfMonth = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    bookings = bookings.Where(b => b.StartedDate >= startOfMonth);
                     break;
+
                 case "thisYear":
-                    var startOfYear = DateOnly.FromDateTime(new DateTime(today.Year, 1, 1));
-                    bookings = bookings.Where(b => b.StartedDate >= startOfYear && b.StartedDate <= today);
+                    var startOfYear = new DateOnly(DateTime.Today.Year, 1, 1);
+                    bookings = bookings.Where(b => b.StartedDate >= startOfYear);
                     break;
+
                 case "custom":
                     if (startDate.HasValue && endDate.HasValue)
                     {
@@ -57,8 +60,9 @@ namespace BookingAppAPI.MvcController
             ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
             ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
 
-            return View(bookings.ToList());
+            return View(await bookings.ToListAsync());
         }
+
 
 
 
@@ -156,5 +160,56 @@ namespace BookingAppAPI.MvcController
 
             return RedirectToAction(nameof(Index));
         }
+
+        // GET: PaymentRequest/Details/{id}
+
+        public async Task<IActionResult> Payment(string filter)
+        {
+            var payments = _context.paymentRequests.AsQueryable();
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            switch (filter)
+            {
+                case "today":
+                    payments = payments.Where(p => p.CreatedDate.Date == today.ToDateTime(TimeOnly.MinValue).Date);
+                    break;
+
+                case "lastWeek":
+                    var startOfLastWeek = DateTime.Today.AddDays(-7);
+                    payments = payments.Where(p => p.CreatedDate >= startOfLastWeek);
+                    break;
+
+                case "thisMonth":
+                    var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    payments = payments.Where(p => p.CreatedDate >= startOfMonth);
+                    break;
+
+                case "thisYear":
+                    var startOfYear = new DateTime(DateTime.Today.Year, 1, 1);
+                    payments = payments.Where(p => p.CreatedDate >= startOfYear);
+                    break;
+            }
+
+            ViewBag.Filter = filter;
+            return View(await payments.ToListAsync());
+        }
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var booking = await _context.Booking
+                .Include(b => b.Service)
+                .Include(b => b.User) // assuming navigation property is `User`
+                .Include(b => b.PaymentRequests) // optional: only if 1:1 mapping exists
+                .FirstOrDefaultAsync(m => m.UniqueId == id);
+
+            if (booking == null)
+                return NotFound();
+
+            return View(booking);
+        }
+
     }
 }

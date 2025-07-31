@@ -32,7 +32,8 @@ public class PaymentController : ControllerBase
             Metadata = new Dictionary<string, string>
         {
             { "customerName", request.CustomerName ?? "Guest" },
-            { "bookingId", request.BookingId ?? "" }
+           { "bookingId", request.BookingId.ToString() }
+
         }
         };
 
