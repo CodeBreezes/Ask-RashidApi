@@ -35,6 +35,13 @@ public class PaymentController : ControllerBase
             PaymentMethodTypes = new List<string> { "card" },
             Description = $"Booking payment for {request.PhoneNumber}",
             Metadata = new Dictionary<string, string>
+<<<<<<< Updated upstream
+        {
+            { "customerName", request.CustomerName ?? "Guest" },
+           { "bookingId", request.BookingId.ToString() }
+
+        }
+=======
             {
                 { "customerName", request.CustomerName ?? "Guest" },
                 { "bookingId", request.BookingId ?? "" },
@@ -42,6 +49,7 @@ public class PaymentController : ControllerBase
                 { "phoneNumber", request.PhoneNumber }
             },
             ReceiptEmail = request.Email
+>>>>>>> Stashed changes
         };
 
         var service = new PaymentIntentService();

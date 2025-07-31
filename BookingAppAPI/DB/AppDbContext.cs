@@ -28,6 +28,8 @@ namespace BookingAppAPI.DB
         public DbSet<Services> Services { get; set; }
         public DbSet<Subtopics> Subtopics { get; set; }
         public DbSet<Bulletins> Bulletins { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+
 
         public DbSet<BookingAppAPI.DB.Booking> Booking { get; set; } = default!;
         public DbSet<PaymentRequest> paymentRequests { get; set; }
