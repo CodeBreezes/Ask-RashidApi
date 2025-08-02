@@ -45,9 +45,6 @@ namespace BookingAppAPI.Migrations
                     b.Property<TimeOnly>("StartedTime")
                         .HasColumnType("time");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Topic")
                         .HasColumnType("nvarchar(max)");
 
@@ -57,8 +54,6 @@ namespace BookingAppAPI.Migrations
                     b.HasKey("UniqueId");
 
                     b.HasIndex("ServiceId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Booking");
                 });
@@ -178,6 +173,9 @@ namespace BookingAppAPI.Migrations
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -349,15 +347,7 @@ namespace BookingAppAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookingAppAPI.DB.Models.User.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Service");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Address.City", b =>

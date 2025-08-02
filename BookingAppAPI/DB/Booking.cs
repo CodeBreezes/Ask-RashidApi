@@ -15,14 +15,11 @@ namespace BookingAppAPI.DB
         public Services Service { get; set; } = null!;
 
         public int UserId { get; set; }
-        [ForeignKey("UserId")]
 
-        public AppUser User { get; set; } = null!;
         public DateOnly StartedDate { get; set; }
         public TimeOnly StartedTime { get; set; }
         public DateTime? EndedDate { get; set; }
         public  string? Topic { get; set; } = string.Empty;
         public string? Notes { get; set; } = string.Empty;
-        public ICollection<PaymentRequest> PaymentRequests { get; set; } = new List<PaymentRequest>();
     }
 }

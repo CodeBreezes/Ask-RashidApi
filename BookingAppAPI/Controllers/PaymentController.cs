@@ -49,7 +49,8 @@ public class PaymentController : ControllerBase
 
         return Ok(new
         {
-            clientSecret = intent.ClientSecret
+            clientSecret = intent.ClientSecret,
+            paymentIntentId = intent.Id
         });
     }
 

@@ -32,7 +32,6 @@ namespace BookingAppAPI.DB
 
 
         public DbSet<BookingAppAPI.DB.Booking> Booking { get; set; } = default!;
-        public DbSet<PaymentRequest> paymentRequests { get; set; }
 
     }
 }
