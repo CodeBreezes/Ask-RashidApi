@@ -100,6 +100,28 @@ namespace BookingAppAPI.Controllers
 
             return CreatedAtAction("GetServices", new { id = services.UniqueId }, services);
         }
+        [HttpGet("GetUserByEmail")]
+        public async Task<ActionResult<object>> GetUserByEmail([FromQuery] string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Email is required.");
+
+            var user = await _context.AppUsers
+                .Where(u => u.LoginEmail.ToLower() == email.ToLower())
+                .Select(u => new
+                {
+                    u.UniqueId,
+                    u.FullName,
+                    u.LoginEmail,
+                    u.PhoneNumber,
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            return Ok(user);
+        }
 
         // DELETE: api/Services/5
         [HttpDelete("{id}")]

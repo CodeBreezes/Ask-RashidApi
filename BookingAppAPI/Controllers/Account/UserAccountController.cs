@@ -4,7 +4,8 @@ using Bpst.API.Services.UserAccount;
 using Bpst.API.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
- 
+using Microsoft.EntityFrameworkCore;
+
 namespace Bpst.API.Controllers.Account
 {
     [Route("api/[controller]")]
@@ -50,5 +51,17 @@ namespace Bpst.API.Controllers.Account
             var result = await _userService.UpdatePassword(email,oldPassword, newPassword, confirmPassword);
             return result;
         }
+        [HttpPost("CheckEmailExists")]
+        public async Task<ActionResult<bool>> CheckEmailExists([FromBody] string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            bool exists = await _context.AppUsers
+                .AnyAsync(u => u.LoginEmail.ToLower() == email.ToLower());
+
+            return exists;
+        }
+
     }
 }

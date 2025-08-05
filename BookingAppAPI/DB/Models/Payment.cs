@@ -24,6 +24,7 @@ namespace BookingAppAPI.DB.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public string? BookingId { get; set; }
+        public int? ServiceId { get; set; }
 
         public int? userId { get; set; }
     }
