@@ -1,65 +1,76 @@
 ﻿@model IEnumerable<BookingAppAPI.DB.Models.Payment>
+
 @{
-    ViewData["Title"] = "Payments";
+    ViewData["Title"] = "All Payments";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.ActiveTabName = "Payments";
-
-    var searchQuery = ViewBag.Search as string ?? "";
+    var selectedFilter = ViewBag.Filter as string ?? "";
 }
 
 <div class="content px-1">
-    <div class="card shadow rounded-1">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-1">
+    <div class="card shadow rounded-3">
+        <div class="card-header bg-primary text-white rounded-top-3 d-flex flex-wrap justify-content-between align-items-center">
             <h4 class="mb-0">All Payments</h4>
-            <form method="get" asp-action="Index" class="row g-2 align-items-center mb-0">
-               
+
+            <form method="get" asp-action="Payment" class="row gx-2 gy-1 align-items-end m-0">
                 <div class="col-auto">
-                    <select name="filter" class="form-select form-select-sm">
-                        <option value="">All</option>
-                        <option value="today" selected="@(ViewBag.Filter == "today")">Today</option>
-                        <option value="lastWeek" selected="@(ViewBag.Filter == "lastWeek")">Last 7 Days</option>
-                        <option value="thisMonth" selected="@(ViewBag.Filter == "thisMonth")">This Month</option>
-                        <option value="thisYear" selected="@(ViewBag.Filter == "thisYear")">This Year</option>
+                    <label for="filterOption" class="form-label text-white mb-0">Filter</label>
+                    <select name="filter" id="filterOption" class="form-select form-select-sm">
+                        <option value="" selected="@(selectedFilter == "" ? "selected" : null)">All</option>
+                        <option value="today" selected="@(selectedFilter == "today" ? "selected" : null)">Today</option>
+                        <option value="thisWeek" selected="@(selectedFilter == "thisWeek" ? "selected" : null)">This Week</option>
+                        <option value="thisMonth" selected="@(selectedFilter == "thisMonth" ? "selected" : null)">This Month</option>
+                        <option value="thisYear" selected="@(selectedFilter == "thisYear" ? "selected" : null)">This Year</option>
                     </select>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-light btn-sm shadow-sm">
-                        <i class="bi bi-search me-1"></i> Filter
+                    <button type="submit" class="btn btn-light btn-sm mt-3">
+                        <i class="bi bi-filter me-1"></i> Apply
                     </button>
                 </div>
             </form>
         </div>
 
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="tblPayments">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Phone</th>
-                            <th>Customer</th>
-                            <th>Email</th>
-                            <th>Amount</th>
-                            <th>Currency</th>
-                            <th>Description</th>
-                            <th>Booking ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
+        <div class="table-responsive p-2">
+            <table class="table table-hover table-striped table-bordered align-middle mb-0" id="tblPayments">
+                <thead class="table-light text-center">
+                    <tr>
+                        <th>#</th>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>Description</th>
+                        <th>Created At</th>
+                        <th>Booking ID</th>
+                        <th>Service ID</th>
+                        <th>User ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var p in Model)
                         {
                             <tr>
-                                <td>@item.PhoneNumber</td>
-                                <td>@item.CustomerName</td>
-                                <td>@item.Email</td>
-                                <td>₹@item.Amount.ToString("F2")</td>
-                                <td>@item.Currency</td>
-                                <td>@item.Description</td>
-                                <td>@item.BookingId</td>
+                                <td class="text-center">@index</td>
+                                <td>@p.CustomerName</td>
+                                <td>@p.Email</td>
+                                <td>@p.PhoneNumber</td>
+                                <td>@p.Amount</td>
+                                <td>@p.Currency</td>
+                                <td>@p.Description</td>
+                                <td>@p.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td>@p.BookingId</td>
+                                <td>@p.ServiceId</td>
+                                <td>@p.userId</td>
                             </tr>
+                            index++;
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -74,7 +85,10 @@
         $(document).ready(function () {
             $('#tblPayments').DataTable({
                 "pageLength": 10,
-                "ordering": true
+                "ordering": true,
+                "language": {
+                    "search": "🔍 Search payments:"
+                }
             });
         });
     </script>

@@ -1,143 +1,94 @@
-﻿@model BookingAppAPI.DB.Services
+﻿@model BookingAppAPI.DB.Models.ServiceFullViewModel
 
 @{
     ViewData["Title"] = "Create Service";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewBag.ActiveTabName = "Services"; // or "SessionYear", "FeeTypes", etc.
-
+    ViewBag.ActiveTabName = "Services";
 }
 
-<div class="container mt-0">
+<div class="container px-2">
     <div class="card shadow-sm rounded">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Create New Service</h4>
         </div>
 
         <div class="card-body">
-            <form asp-action="Create" class="needs-validation" novalidate>
-                <input asp-for="UniqueId" type="hidden" class="form-control" />
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="UniqueId" type="hidden" />
                 <div class="row g-4">
                     <div class="col-md-4">
-                        <label asp-for="Name" class="form-label fw-semibold">Service Name</label>
+                        <label class="form-label fw-semibold">Service Name</label>
                         <input asp-for="Name" class="form-control" placeholder="Enter service name" />
-                        <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
-
                     <div class="col-md-4">
-                        <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                        <label class="form-label fw-semibold">Description</label>
                         <input asp-for="Description" class="form-control" placeholder="Enter description" />
-                        <span asp-validation-for="Description" class="text-danger small"></span>
                     </div>
-
                     <div class="col-md-4">
-                        <label asp-for="Cost" class="form-label fw-semibold">Cost</label>
+                        <label class="form-label fw-semibold">Cost</label>
                         <input asp-for="Cost" class="form-control" placeholder="Enter cost" />
-                        <span asp-validation-for="Cost" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="form-check mt-4">
-                            <input class="form-check-input" asp-for="IsActive" />
-                            <label class="form-check-label fw-semibold" asp-for="IsActive">Is Active</label>
-                        </div>
                     </div>
                 </div>
+
+                <hr class="my-4" />
+                <h5 class="text-secondary border-bottom pb-2 mb-3">Subtopics</h5>
+
+                <div id="subtopics-container"></div>
+
+                <button type="button" class="btn btn-outline-primary btn-sm my-3" onclick="addSubtopic()">➕ Add Subtopic</button>
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary px-4">💾 Save Service</button>
+                    <a asp-action="Index" class="btn btn-link">← Back to List</a>
                 </div>
-
-                @if (Model.Subtopics?.Count > 0)
-                {
-                    <hr class="my-5" />
-                    <h5 class="text-secondary border-bottom pb-2 mb-3">Subtopics <span class="badge bg-info">@Model.Subtopics.Count</span></h5>
-
-                    @foreach (var subtopic in Model.Subtopics)
-                    {
-                        <div class="border rounded p-3 mb-4 bg-light-subtle">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Title</label>
-                                    <input asp-for="@subtopic.Title" class="form-control" placeholder="Subtopic title" />
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label">Linked Service</label>
-                                    <input asp-for="@subtopic.Service.Name" class="form-control" disabled />
-                                </div>
-
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-success w-100" onclick="toggleBulletin(this)">➕ Add Bulletins</button>
-                                </div>
-
-                                <div class="bulletin-form row g-3 mb-2 ps-2 border-start border-2 border-info mt-2 d-none">
-                                    <div class="col-md-4">
-                                        <label class="form-label">Bulletin Content</label>
-                                        <input name="NewBulletins[][Content]" class="form-control" placeholder="Enter bulletin" />
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label class="form-label">Order</label>
-                                        <input name="NewBulletins[][OrderIndex]" class="form-control" placeholder="Index" />
-                                    </div>
-
-                                    <div class="col-md-4 d-flex align-items-end">
-                                        <button type="button" class="btn btn-outline-danger w-100">💾 Save</button>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            @if (subtopic.Bulletins?.Count > 0)
-                            {
-                                <div class="mt-3">
-                                    <h6 class="mb-3">📌 Bulletins <span class="badge bg-secondary">@subtopic.Bulletins.Count</span></h6>
-
-                                    @foreach (var bulletin in subtopic.Bulletins)
-                                    {
-                                        <div class="row g-3 mb-2 ps-2 border-start border-2 border-info">
-                                            <div class="col-md-4">
-                                                <label class="form-label">Bulletin Content</label>
-                                                <input asp-for="@bulletin.Content" class="form-control" placeholder="Enter bulletin" />
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <label class="form-label">Order</label>
-                                                <input asp-for="@bulletin.OrderIndex" class="form-control" placeholder="Index" />
-                                            </div>
-
-                                            <div class="col-md-4 d-flex align-items-end">
-                                                <button type="button" class="btn btn-outline-danger w-100">❌ Remove Bulletin</button>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-                }
             </form>
-
-            <div class="mt-3">
-                <a asp-action="Index" class="btn btn-link">← Back to List</a>
-            </div>
         </div>
     </div>
 </div>
-<script>
-    function toggleBulletin(button) {
-        const container = button.closest('.row').parentElement;
-        const hiddenBulletinForm = container.querySelector('.bulletin-form');
-
-        if (hiddenBulletinForm) {
-            hiddenBulletinForm.classList.toggle('d-none');
-        }
-    }
-</script>
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <script>
+        let subtopicIndex = 0;
+
+        function addSubtopic() {
+            const subContainer = document.getElementById('subtopics-container');
+            const subHTML = `
+                <div class="border rounded p-3 mb-4 bg-light-subtle">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-6">
+                            <label class="form-label">Subtopic Title</label>
+                            <input name="Subtopics[${subtopicIndex}].Title" class="form-control" placeholder="Subtopic title" />
+                        </div>
+                        <div class="col-md-6 d-flex justify-content-end align-items-end">
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addBulletin(${subtopicIndex})">➕ Add Bulletin</button>
+                        </div>
+                    </div>
+
+                    <div id="bulletins-${subtopicIndex}" class="mt-3 ps-3 border-start border-3 border-info"></div>
+                </div>`;
+            subContainer.insertAdjacentHTML('beforeend', subHTML);
+            subtopicIndex++;
+        }
+
+        function addBulletin(subIndex) {
+            const bulletinContainer = document.getElementById(`bulletins-${subIndex}`);
+            const bulletinCount = bulletinContainer.querySelectorAll('.row').length;
+
+            const html = `
+                <div class="row g-3 align-items-center mb-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Bulletin Content</label>
+                        <input name="Subtopics[${subIndex}].Bulletins[${bulletinCount}].Content" class="form-control" placeholder="Enter bulletin" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Order</label>
+                        <input name="Subtopics[${subIndex}].Bulletins[${bulletinCount}].OrderIndex" type="number" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-outline-danger mt-4 w-100" onclick="this.closest('.row').remove()">❌ Remove</button>
+                    </div>
+                </div>`;
+            bulletinContainer.insertAdjacentHTML('beforeend', html);
+        }
+    </script>
 }

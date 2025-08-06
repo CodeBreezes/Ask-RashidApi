@@ -45,27 +45,27 @@ namespace BookingAppAPI.MvcController
             return View(services);
         }
 
-        // GET: Service/Create
 
-        // GET: Create or Edit Service
         public async Task<IActionResult> Create(int id = 0)
         {
-            Services service = null;
+            Services service;
 
             if (id != 0)
             {
-                // Try to load existing service (for update)
                 service = await _context.Services
                     .Include(s => s.Subtopics)
                         .ThenInclude(st => st.Bulletins)
                     .FirstOrDefaultAsync(s => s.UniqueId == id);
-            }
 
-            if (service == null)
+                if (service == null)
+                    return NotFound();
+            }
+            else
             {
-                // Create new default service if not found
                 service = new Services
                 {
+                    CreatedDate = DateTime.Now,
+                    LastUpdatedDate = DateTime.Now,
                     Subtopics = new List<Subtopics>
             {
                 new Subtopics
@@ -78,6 +78,7 @@ namespace BookingAppAPI.MvcController
                         new Bulletins
                         {
                             Content = "Welcome to the service!",
+                            OrderIndex = 1,
                             CreatedDate = DateTime.Now,
                             LastUpdatedDate = DateTime.Now
                         }
@@ -87,35 +88,107 @@ namespace BookingAppAPI.MvcController
                 };
             }
 
-            return View(service);
+            var viewModel = new ServiceFullViewModel
+            {
+                UniqueId = service.UniqueId,
+                Name = service.Name,
+                Description = service.Description,
+                Cost = service.Cost,
+                Subtopics = service.Subtopics.Select(st => new SubtopicViewModel
+                {
+                    Title = st.Title,
+                    Bulletins = st.Bulletins.Select(b => new BulletinViewModel
+                    {
+                        Content = b.Content,
+                        OrderIndex = b.OrderIndex
+                    }).ToList()
+                }).ToList()
+            };
+
+            return View(viewModel);
         }
 
-        // POST: Create or Update Service
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Services services)
+        public async Task<IActionResult> Create(ServiceFullViewModel vm)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                if (services.UniqueId == 0)
-                {
-                    // New service
-                    _context.Add(services);
-                }
-                else
-                {
-                    // Update existing service
-                    _context.Update(services);
-                }
-
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Re-display the form with the same view model so the view's @model matches.
+                return View(vm);
             }
 
-            return View(services);
-        }
+            Services services;
+            if (vm.UniqueId == 0)
+            {
+                // New service
+                services = new Services
+                {
+                    Name = vm.Name,
+                    Description = vm.Description,
+                    Cost = vm.Cost,
+                    IsActive = true, // or from vm if you expose it
+                    CreatedDate = DateTime.Now,
+                    LastUpdatedDate = DateTime.Now,
+                    Subtopics = vm.Subtopics.Select(st => new Subtopics
+                    {
+                        Title = st.Title,
+                        CreatedDate = DateTime.Now,
+                        LastUpdatedDate = DateTime.Now,
+                        Bulletins = st.Bulletins.Select(b => new Bulletins
+                        {
+                            Content = b.Content,
+                            OrderIndex = b.OrderIndex,
+                            CreatedDate = DateTime.Now,
+                            LastUpdatedDate = DateTime.Now
+                        }).ToList()
+                    }).ToList()
+                };
 
-        // GET: Service/Edit/5
+                _context.Services.Add(services);
+            }
+            else
+            {
+                // Existing service - fetch and replace
+                var existingService = await _context.Services
+                    .Include(s => s.Subtopics)
+                        .ThenInclude(st => st.Bulletins)
+                    .FirstOrDefaultAsync(s => s.UniqueId == vm.UniqueId);
+
+                if (existingService == null)
+                    return NotFound();
+
+                // Update scalar fields
+                existingService.Name = vm.Name;
+                existingService.Description = vm.Description;
+                existingService.Cost = vm.Cost;
+                existingService.LastUpdatedDate = DateTime.Now;
+                // preserve IsActive unless you add it to VM
+
+                // Remove old subtopics (and their bulletins)
+                _context.Subtopics.RemoveRange(existingService.Subtopics);
+
+                // Attach new ones from VM
+                existingService.Subtopics = vm.Subtopics.Select(st => new Subtopics
+                {
+                    ServiceId = existingService.UniqueId,
+                    Title = st.Title,
+                    CreatedDate = DateTime.Now,
+                    LastUpdatedDate = DateTime.Now,
+                    Bulletins = st.Bulletins.Select(b => new Bulletins
+                    {
+                        Content = b.Content,
+                        OrderIndex = b.OrderIndex,
+                        CreatedDate = DateTime.Now,
+                        LastUpdatedDate = DateTime.Now
+                    }).ToList()
+                }).ToList();
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
 
 
 
