@@ -51,6 +51,12 @@ namespace Bpst.API.Controllers.Account
             var result = await _userService.UpdatePassword(email,oldPassword, newPassword, confirmPassword);
             return result;
         }
+        [HttpPost("ChangePasswordbyEmail")]
+        public async Task<ActionResult<UpdateResponse>> ChangePasswordbyEmail(string email,string oldPassword, string newPassword, string confirmPassword)
+        {
+            var result = await _userService.UpdatePassword(email, oldPassword, newPassword, confirmPassword);
+            return result;
+        }
         [HttpPost("CheckEmailExists")]
         public async Task<ActionResult<bool>> CheckEmailExists([FromBody] string email)
         {

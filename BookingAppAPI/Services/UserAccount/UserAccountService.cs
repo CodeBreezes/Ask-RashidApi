@@ -203,20 +203,27 @@ namespace Bpst.API.Services.UserAccount
                 {
                     result.IsUpdated = false;
                     result.ErrorMessages.Add("Old password is incorrect.");
+                   
                 }
-                if (newPassword != confirmPassword)
-                {
-                    result.IsUpdated = false;
-                    result.ErrorMessages.Add("New password and confirm password do not match.");
-                }
+               
                 else
                 {
-                    _appUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                    if (newPassword != confirmPassword)
+                    {
+                        result.IsUpdated = false;
+                        result.ErrorMessages.Add("New password and confirm password do not match.");
+                    }
+                    else
+                    { 
+                     _appUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
                     _context.AppUsers.Update(_appUser);
                     await _context.SaveChangesAsync();
+                    result.IsUpdated = true;
+                    result.SuccessMessages = new List<string>() { "Password updated successfully." };
+                    }
                 }
             }
-            result.IsUpdated = true;
+            
             return result;
         }
 
