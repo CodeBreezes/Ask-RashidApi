@@ -5,15 +5,18 @@ using Bpst.API.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using BookingAppAPI.DB.Models;
 
 namespace Bpst.API.Controllers.Account
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserAccountController(AppDbContext context, IUserAccountService userService) : ControllerBase
+    public class UserAccountController(AppDbContext context, IUserAccountService userService, IWebHostEnvironment hostingEnvironment) : ControllerBase
     {
         private readonly AppDbContext _context = context;
         private readonly IUserAccountService _userService = userService;
+        private readonly IWebHostEnvironment _hostingEnvironment = hostingEnvironment;
+
 
         [AllowAnonymous]
         [HttpPost("UserRegistration")]
@@ -67,6 +70,56 @@ namespace Bpst.API.Controllers.Account
                 .AnyAsync(u => u.LoginEmail.ToLower() == email.ToLower());
 
             return exists;
+        }
+
+        [HttpPost("UpdateProfile")]
+        public async Task<ActionResult<UpdateResponse>> UpdateProfile([FromForm] UpdateProfileVM model)
+        {
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.LoginEmail == model.Email);
+            if (user == null)
+                return NotFound(new UpdateResponse
+                {
+                    IsUpdated = false,
+                    ErrorMessages = new List<string> { "User not found." }
+                });
+
+            user.DateOfBirth = model.DateOfBirth;
+            user.Gender = model.Gender;
+            user.LastUpdatedDate = DateTime.UtcNow;
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Email = model.Email;
+
+            if (!string.IsNullOrWhiteSpace(model.Address))
+                user.Address = model.Address;
+            
+            if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+            {
+                string folderPath = Path.Combine(_hostingEnvironment.WebRootPath, "UserProfiles", user.UniqueId.ToString());
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
+                string fileName = Path.GetFileNameWithoutExtension(model.ProfileImage.FileName);
+                string extension = Path.GetExtension(model.ProfileImage.FileName);
+                string uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                string fullPath = Path.Combine(folderPath, uniqueFileName);
+
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await model.ProfileImage.CopyToAsync(stream);
+                }
+
+                
+                user.ProfileImageUrl = $"/UserProfiles/{user.UniqueId}/{uniqueFileName}";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new UpdateResponse
+            {
+                IsUpdated = true,
+                SuccessMessages = new List<string> { "Profile updated successfully." }
+            });
         }
 
     }

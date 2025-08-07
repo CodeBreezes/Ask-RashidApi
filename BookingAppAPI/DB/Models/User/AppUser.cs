@@ -36,5 +36,10 @@ namespace BookingAppAPI.DB.Models.User
         public string LoginEmail { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public List<string>? Roles { get; set; } = [];
+
+        [MaxLength(500)]
+        public string? ProfileImageUrl { get; set; }
+
+        public string? Address { get; set; } = string.Empty;
     }
 }
