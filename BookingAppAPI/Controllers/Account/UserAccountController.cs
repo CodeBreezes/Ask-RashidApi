@@ -75,7 +75,7 @@ namespace Bpst.API.Controllers.Account
         [HttpPost("UpdateProfile")]
         public async Task<ActionResult<UpdateResponse>> UpdateProfile([FromForm] UpdateProfileVM model)
         {
-            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.LoginEmail == model.Email);
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UniqueId == model.UserID);
             if (user == null)
                 return NotFound(new UpdateResponse
                 {
@@ -89,6 +89,7 @@ namespace Bpst.API.Controllers.Account
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.Email = model.Email;
+            user.PhoneNumber = model.PhoneNumber;
 
             if (!string.IsNullOrWhiteSpace(model.Address))
                 user.Address = model.Address;

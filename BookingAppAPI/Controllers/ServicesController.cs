@@ -90,8 +90,6 @@ namespace BookingAppAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Services
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Services>> PostServices(Services services)
         {
@@ -122,8 +120,23 @@ namespace BookingAppAPI.Controllers
 
             return Ok(user);
         }
+        [HttpGet("GetUserById")]
+        public async Task<ActionResult<object>> GetUserById(int uniqueId)
+        {
+            if (uniqueId == null)
+                return BadRequest("UniqueId is required.");
 
-        // DELETE: api/Services/5
+            var user = await _context.AppUsers
+                .Where(u => u.UniqueId == uniqueId)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            return Ok(user);
+        }
+
+       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServices(int id)
         {
