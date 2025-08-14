@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "All Payments";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewBag.ActiveTabName = "Payments";
+    ViewBag.ActiveTabName = "Payment";
     var selectedFilter = ViewBag.Filter as string ?? "";
 }
 
@@ -16,7 +16,7 @@
                 <div class="col-auto">
                     <label for="filterOption" class="form-label text-white mb-0">Filter</label>
                     <select name="filter" id="filterOption" class="form-select form-select-sm">
-                        <option value="" selected="@(selectedFilter == "" ? "selected" : null)">All</option>
+                        <option value="" selected="@(selectedFilter == "" ? "selected" : null)">-- All Payments --</option>
                         <option value="today" selected="@(selectedFilter == "today" ? "selected" : null)">Today</option>
                         <option value="thisWeek" selected="@(selectedFilter == "thisWeek" ? "selected" : null)">This Week</option>
                         <option value="thisMonth" selected="@(selectedFilter == "thisMonth" ? "selected" : null)">This Month</option>
@@ -28,8 +28,7 @@
                         <i class="bi bi-filter me-1"></i> Apply
                     </button>
                 </div>
-            </form>
-        </div>
+            </form>        </div>
 
         <div class="table-responsive p-2">
             <table class="table table-hover table-striped table-bordered align-middle mb-0" id="tblPayments">
