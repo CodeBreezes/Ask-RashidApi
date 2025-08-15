@@ -45,7 +45,6 @@ namespace BookingAppAPI.MvcController
             return View(services);
         }
 
-
         public async Task<IActionResult> Create(int id = 0)
         {
             Services service;
@@ -108,27 +107,24 @@ namespace BookingAppAPI.MvcController
             return View(viewModel);
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ServiceFullViewModel vm)
         {
             if (!ModelState.IsValid)
             {
-                // Re-display the form with the same view model so the view's @model matches.
                 return View(vm);
             }
 
             Services services;
             if (vm.UniqueId == 0)
             {
-                // New service
                 services = new Services
                 {
                     Name = vm.Name,
                     Description = vm.Description,
                     Cost = vm.Cost,
-                    IsActive = true, // or from vm if you expose it
+                    IsActive = true,
                     CreatedDate = DateTime.Now,
                     LastUpdatedDate = DateTime.Now,
                     Subtopics = vm.Subtopics.Select(st => new Subtopics
@@ -150,7 +146,6 @@ namespace BookingAppAPI.MvcController
             }
             else
             {
-                // Existing service - fetch and replace
                 var existingService = await _context.Services
                     .Include(s => s.Subtopics)
                         .ThenInclude(st => st.Bulletins)
@@ -159,17 +154,13 @@ namespace BookingAppAPI.MvcController
                 if (existingService == null)
                     return NotFound();
 
-                // Update scalar fields
                 existingService.Name = vm.Name;
                 existingService.Description = vm.Description;
                 existingService.Cost = vm.Cost;
                 existingService.LastUpdatedDate = DateTime.Now;
-                // preserve IsActive unless you add it to VM
 
-                // Remove old subtopics (and their bulletins)
                 _context.Subtopics.RemoveRange(existingService.Subtopics);
 
-                // Attach new ones from VM
                 existingService.Subtopics = vm.Subtopics.Select(st => new Subtopics
                 {
                     ServiceId = existingService.UniqueId,
