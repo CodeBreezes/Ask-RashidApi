@@ -41,5 +41,7 @@ namespace BookingAppAPI.DB.Models.User
         public string? ProfileImageUrl { get; set; }
 
         public string? Address { get; set; } = string.Empty;
+        public bool GoogleSignIn { get; set; } = false;
+
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB.Models;
+using BookingAppAPI.DB.Models.User;
 
 namespace Bpst.API.Controllers.Account
 {
@@ -60,16 +61,18 @@ namespace Bpst.API.Controllers.Account
             var result = await _userService.UpdatePassword(email, oldPassword, newPassword, confirmPassword);
             return result;
         }
-        [HttpPost("CheckEmailExists")]
-        public async Task<ActionResult<bool>> CheckEmailExists([FromBody] string email)
+        [HttpGet("CheckEmailExists")]
+        public async Task<IActionResult> CheckEmailExists([FromQuery] string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                return false;
+            {
+                return BadRequest("Email is required.");
+            }
 
             bool exists = await _context.AppUsers
                 .AnyAsync(u => u.LoginEmail.ToLower() == email.ToLower());
 
-            return exists;
+            return Ok(new { email, exists });
         }
 
         [HttpPost("UpdateProfile")]

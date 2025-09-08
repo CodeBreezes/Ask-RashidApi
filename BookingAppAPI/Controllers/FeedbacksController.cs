@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookingAppAPI.Controllers
 {
@@ -40,6 +41,13 @@ namespace BookingAppAPI.Controllers
             }
 
             return feedback;
+        }
+        [Authorize]
+        [HttpGet("check-api")]
+        public async Task<ActionResult<string>> CheckApi()
+        {
+
+            return Ok("✅ Authorized: API is working fine.");
         }
 
         // PUT: api/Feedbacks/5

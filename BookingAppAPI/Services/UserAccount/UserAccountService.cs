@@ -20,6 +20,11 @@ namespace Bpst.API.Services.UserAccount
             var user = await _context.AppUsers.AnyAsync(u => u.PhoneNumber.Equals(PhoneNumber));
             return user;
         }
+        public async Task<bool> IfUserEmailExists(string email)
+        {
+            var user = await _context.AppUsers.AnyAsync(u => u.LoginEmail.Equals(email));
+            return user;
+        }
         public async Task<AppUser> GetUserByEmail(string email)
         {
             try
@@ -53,6 +58,11 @@ namespace Bpst.API.Services.UserAccount
                 response.ErrorMessages = new List<string>() { "User already exist with given Phone Number, please try with different Phone Number" };
                 return response;
             }
+            if (await IfUserEmailExists(user.Email))
+            {
+                response.ErrorMessages = new List<string>() { "User already exist with given Email , please try with different Email" };
+                return response;
+            }
             else
             {
                 var appUser = new AppUser()
@@ -64,6 +74,7 @@ namespace Bpst.API.Services.UserAccount
                     LastName = user.LastLame,
                     PhoneNumber = user.PhoneNumber,
                     Roles = user.Roles,
+                    GoogleSignIn = user.GoogleSignIn,
                 };
                 _context.AppUsers.Add(appUser);
                 try
@@ -127,8 +138,11 @@ namespace Bpst.API.Services.UserAccount
         private LoginResponse ValidateCredentials(AppUser _appUser, string password)
         {
             var response = new LoginResponse() { };
-            response.IsLoginSuccess = _appUser == null ? false
-                : BCrypt.Net.BCrypt.Verify(password, _appUser.PasswordHash);
+            if (_appUser.GoogleSignIn==true)
+                response.IsLoginSuccess = true;
+            else
+                response.IsLoginSuccess = _appUser == null ? false
+                    : BCrypt.Net.BCrypt.Verify(password, _appUser.PasswordHash);
             return response;
         }
         private async Task PopulateLoginResponse(LoginResponse response, string loginName)
