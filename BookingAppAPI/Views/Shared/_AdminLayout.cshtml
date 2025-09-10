@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var activeTabName = ViewBag.ActiveTabName as string ?? "";
+    var username = Context.Session.GetString("User") ?? "Admin"; // get from session
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,180 +12,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-    <style>
-        :root {
-            --sidebar-width: 260px;
-            --sidebar-bg: #fff;
-            --primary-color: #2b7af0;
-            --bg-light: #f5f6fa;
-            --text-color: #555;
-            --border-color: #e5e5e5;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-color);
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: var(--sidebar-width);
-            background-color: var(--sidebar-bg);
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            z-index: 1000;
-            transition: transform 0.3s ease-in-out;
-        }
-
-            .sidebar.hide
-            {
-                transform: translateX(-100%);
-            }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .sidebar-title {
-            font-weight: 600;
-            color: #333;
-            font-size: 1.1rem;
-        }
-
-        .sidebar-subtitle {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .sidebar-menu .nav-link
-        {
-            color: #888;
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-        }
-
-            .sidebar-menu .nav-link:hover,
-            .sidebar-menu .nav-link.active {
-                background-color: var(--primary-color);
-                color: #fff;
-            }
-
-            .sidebar-menu .nav-link i {
-                margin-right: 10px;
-            }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 20px;
-        }
-
-        .btn-pro {
-            background-color: var(--primary-color);
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-weight: 600;
-            width: 100%;
-            border: none;
-        }
-
-        #page-content-wrapper {
-            margin-left: var(--sidebar-width);
-            padding: 100px 20px 20px 20px;
-            transition: margin-left 0.3s ease-in-out;
-        }
-
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: var(--sidebar-width);
-            width: calc(100% - var(--sidebar-width));
-            background-color: var(--sidebar-bg) !important;
-            z-index: 1020;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            padding: 1rem 1.5rem;
-            transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
-        }
-
-        .profile-img {
-            width: 35px;
-            height: 35px;
-            object-fit: cover;
-        }
-
-        .search-container {
-            position: relative;
-            width: 300px;
-        }
-
-        .search-input {
-            border-radius: 50px;
-            background-color: var(--bg-light);
-            border: 1px solid var(--border-color);
-            padding-left: 40px;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #aaa;
-        }
-
-        /* Responsive */
-        @@media (max-width: 991.98px) {
-            .sidebar
-        {
-            transform: translateX(-100%);
-            position: fixed;
-            z-index: 1050;
-        }
-
-        .sidebar.show {
-            transform: translateX(0);
-        }
-
-        #page-content-wrapper {
-            margin-left: 0;
-            padding-top: 90px;
-        }
-
-        .navbar {
-            left: 0;
-            width: 100%;
-        }
-
-        }
-    </style>
+    <link href="~/stylesheet.css" rel="stylesheet" />
 </head>
-
 <body>
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <img src="https://i.pravatar.cc/50?img=1" class="rounded-circle me-2" alt="User" />
             <div>
-                <div class="sidebar-title">Admin</div>
+                <div class="sidebar-title">@username</div>
                 <div class="sidebar-subtitle">Administrator</div>
             </div>
         </div>
-        @{
-            var activeTabName = ViewBag.ActiveTabName as string ?? "";
-        }
+
         <div class="sidebar-menu flex-grow-1">
             <ul class="nav flex-column">
                 <li class="nav-item">
@@ -191,39 +33,30 @@
                 </li>
                 <li class="nav-item">
                     <a href="/Service/Index" class="nav-link @(activeTabName == "Services" ? "active" : "")">
-                        <i class="fas fa-cogs"></i>All Services
+                        <i class="fas fa-cogs"></i> All Services
                     </a>
                 </li>
-            
-
                 <li class="nav-item">
                     <a href="/Bookings/Index" class="nav-link @(activeTabName == "Booking" ? "active" : "")">
-                        <i class="fas fa-envelope"></i>All Booking 
+                        <i class="fas fa-envelope"></i> All Bookings
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a href="/Bookings/Payment" class="nav-link @(activeTabName == "Payment" ? "active" : "")">
-                        <i class="fas fa-envelope"></i>All Payments 
-                        </a>
-                </li>
-
-
-                <li class="nav-item">
-                    <a href="/Feedbacks/Index" class="nav-link @(activeTabName == "Feedback" ? "active" : "")">
-                        <i class="fas fa-cogs"></i>All Feedback
+                        <i class="fas fa-credit-card"></i> All Payments
                     </a>
                 </li>
-
-             
-
-
+                <li class="nav-item">
+                    <a href="/Feedbacks/Index" class="nav-link @(activeTabName == "Feedback" ? "active" : "")">
+                        <i class="fas fa-comments"></i> All Feedback
+                    </a>
+                </li>
             </ul>
         </div>
 
         <div class="sidebar-footer">
-            <a href="#" class="btn btn-pro">
-                <i class="fas fa-cloud-download-alt me-2"></i> Upgrade
+            <a href="/UserAccount/Logout" class="btn btn-pro">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
             </a>
         </div>
     </div>
@@ -241,18 +74,16 @@
                 </div>
 
                 <div class="d-flex align-items-center ms-auto">
-                    <a class="nav-link px-3" href="#"><i class="fas fa-envelope-open-text"></i></a>
-                    <a class="nav-link px-3" href="#"><i class="fas fa-bell"></i></a>
                     <div class="dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                            <span class="me-2 d-none d-md-inline">Admin</span>
+                            <span class="me-2 d-none d-md-inline">@username</span>
                             <img src="https://i.pravatar.cc/50?img=1" class="rounded-circle profile-img" alt="Profile" />
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="/Admin/UserProfile">Profile</a></li>
                             <li><a class="dropdown-item" href="#">Settings</a></li>
                             <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="#">Logout</a></li>
+                            <li><a class="dropdown-item" href="/UserAccount/Logout">Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -274,3 +105,4 @@
     @RenderSection("Scripts", required: false)
 </body>
 </html>
+
