@@ -215,7 +215,10 @@ namespace BookingAppAPI.MvcController
 
 
 
-
+        public IActionResult PrivacyPolicy()
+        {
+            return View();
+        }
         private bool ServicesExists(int id)
         {
             return _context.Services.Any(e => e.UniqueId == id);
