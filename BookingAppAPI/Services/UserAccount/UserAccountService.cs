@@ -71,7 +71,7 @@ namespace Bpst.API.Services.UserAccount
                     LoginEmail = user.Email,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.Password),
                     FirstName = user.FirstName,
-                    LastName = user.LastLame,
+                    LastName = user.LastName,
                     PhoneNumber = user.PhoneNumber,
                     Roles = user.Roles,
                     GoogleSignIn = user.GoogleSignIn,

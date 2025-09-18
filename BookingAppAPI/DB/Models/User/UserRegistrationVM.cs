@@ -5,7 +5,7 @@ namespace BookingAppAPI.DB.Models.User
     public class UserRegistrationVM
     {
         public string FirstName { get; set; } = string.Empty;
-        public string LastLame { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         [Required]
         [EmailAddress]
