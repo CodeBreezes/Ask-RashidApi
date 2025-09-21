@@ -31,16 +31,16 @@ namespace BookingAppAPI.MvcController
             if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
                 return Content("Invalid link");
 
-            //var user = await _context.AppUsers
-            //    .FirstOrDefaultAsync(u =>
-            //        u.LoginEmail == email &&
-            //        u.ResetToken == token);
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u =>
+                    u.LoginEmail == email &&
+                    u.ResetToken == token);
 
-            //if (user == null)
-            //    return Content("Invalid reset link.");
+            if (user == null)
+                return Content("Invalid reset link.");
 
-            //if (user.ResetTokenExpiry < DateTime.UtcNow)
-            //    return Content("Reset link has expired.");
+            if (user.ResetTokenExpiry < DateTime.UtcNow)
+                return Content("Reset link has expired.");
 
             var model = new ResetPasswordViewModel
             {
@@ -94,7 +94,7 @@ namespace BookingAppAPI.MvcController
 
             ViewBag.SuccessMessage = "Password updated successfully!";
             return View(); 
-        }
+            }
 
     }
 }
