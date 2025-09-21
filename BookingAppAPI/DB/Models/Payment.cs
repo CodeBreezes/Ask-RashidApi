@@ -19,6 +19,7 @@ namespace BookingAppAPI.DB.Models
         public long Amount { get; set; }
 
         public string Currency { get; set; } = "AED";
+
         public string? Description { get; set; } = "AED";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

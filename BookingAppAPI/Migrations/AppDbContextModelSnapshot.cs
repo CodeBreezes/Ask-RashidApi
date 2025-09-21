@@ -315,6 +315,12 @@ namespace BookingAppAPI.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("ResetToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ResetTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.PrimitiveCollection<string>("Roles")
                         .HasColumnType("nvarchar(max)");
 

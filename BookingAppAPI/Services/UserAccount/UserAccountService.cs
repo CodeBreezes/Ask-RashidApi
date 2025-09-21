@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BookingAppAPI.ViewModels;
 
 namespace Bpst.API.Services.UserAccount
 {
@@ -201,7 +202,7 @@ namespace Bpst.API.Services.UserAccount
             }
             return result;
         }
-
+       
 
 
         public async Task<UpdateResponse> UpdatePassword(string email, string oldPassword, string newPassword, string confirmPassword)

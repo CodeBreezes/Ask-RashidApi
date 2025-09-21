@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
+using Microsoft.AspNetCore.Authorization;
+using System.Net.Mail;
+using System.Net;
 
 namespace BookingAppAPI.Controllers
 {
@@ -21,12 +24,13 @@ namespace BookingAppAPI.Controllers
         }
 
         // GET: api/Services
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Services>>> GetServices()
         {
             return await _context.Services.ToListAsync();
         }
-
+        [Authorize]
         [HttpGet]
         [Route("api/services/GetAllServices")]
         public async Task<ActionResult<IEnumerable<Services>>> GetAllServices()
@@ -46,6 +50,7 @@ namespace BookingAppAPI.Controllers
             }
         }
         // GET: api/Services/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Services>> GetServices(int id)
         {
@@ -61,6 +66,7 @@ namespace BookingAppAPI.Controllers
 
         // PUT: api/Services/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutServices(int id, Services services)
         {
@@ -89,7 +95,7 @@ namespace BookingAppAPI.Controllers
 
             return NoContent();
         }
-
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Services>> PostServices(Services services)
         {
@@ -135,8 +141,7 @@ namespace BookingAppAPI.Controllers
 
             return Ok(user);
         }
-
-       
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServices(int id)
         {
@@ -151,7 +156,56 @@ namespace BookingAppAPI.Controllers
 
             return NoContent();
         }
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest("Email is required.");
 
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.LoginEmail == email);
+            if (user == null)
+                return NotFound("User not found.");
+
+            var token = Guid.NewGuid().ToString();
+            var expiry = DateTime.UtcNow.AddMinutes(5);
+
+            // Save token & expiry to database
+            user.ResetToken = token;
+            user.ResetTokenExpiry = expiry;
+            await _context.SaveChangesAsync();
+
+            string resetLink = $"https://BookingAppAPI.com/UserAccount/ResetPassword?token={token}&email={email}";
+
+            await SendResetEmail(email, resetLink);
+
+            return Ok("Password reset email sent successfully.");
+        }
+        private async Task SendResetEmail(string recipientEmail, string resetLink)
+        {
+            using (var smtpClient = new SmtpClient("smtp.gmail.com"))
+            {
+                smtpClient.Port = 587;
+                smtpClient.Credentials = new NetworkCredential("askrashid04@gmail.com", "kxgl wgwb zjkq elhv");
+                smtpClient.EnableSsl = true;
+
+                var message = new MailMessage("askrashid04@gmail.com", recipientEmail)
+                {
+                    Subject = "Welcome to Ask Rashid!",
+                    Body = $"Click the link below to reset your password (valid for 5 minutes):\n{resetLink}",
+
+                };
+
+                try
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+        }
         private bool ServicesExists(int id)
         {
             return _context.Services.Any(e => e.UniqueId == id);

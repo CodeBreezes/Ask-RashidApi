@@ -43,5 +43,8 @@ namespace BookingAppAPI.DB.Models.User
         public string? Address { get; set; } = string.Empty;
         public bool GoogleSignIn { get; set; } = false;
 
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpiry { get; set; }
+
     }
 }

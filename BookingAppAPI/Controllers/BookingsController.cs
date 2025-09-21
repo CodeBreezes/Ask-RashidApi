@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
 using BookingAppAPI.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookingAppAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class BookingsController : ControllerBase
@@ -22,6 +24,7 @@ namespace BookingAppAPI.Controllers
         }
 
         // GET: api/Bookings
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBooking()
         {
@@ -29,6 +32,7 @@ namespace BookingAppAPI.Controllers
         }
 
         // GET: api/Bookings/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Booking>> GetBooking(int id)
         {
@@ -44,6 +48,7 @@ namespace BookingAppAPI.Controllers
 
         // PUT: api/Bookings/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBooking(int id, Booking booking)
         {
@@ -75,6 +80,7 @@ namespace BookingAppAPI.Controllers
 
         // POST: api/Bookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking(BookingViewModel model)
         {
@@ -102,7 +108,8 @@ namespace BookingAppAPI.Controllers
             return CreatedAtAction(nameof(GetBooking), new { id = booking.UniqueId }, booking);
         }
 
-        // DELETE: api/Bookings/5
+
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {

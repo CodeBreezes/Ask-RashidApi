@@ -213,7 +213,10 @@ namespace BookingAppAPI.MvcController
             return RedirectToAction(nameof(Index));
         }
 
-
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
 
         public IActionResult PrivacyPolicy()
         {
