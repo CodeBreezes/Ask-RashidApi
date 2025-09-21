@@ -174,7 +174,7 @@ namespace BookingAppAPI.Controllers
             user.ResetTokenExpiry = expiry;
             await _context.SaveChangesAsync();
 
-            string resetLink = $"http://BookingAppAPI.com/UserAccount/ResetPassword?token={token}&email={email}";
+            string resetLink = $"http://appointment.bitprosofttech.com/UserAccount/ResetPassword?token={token}&email={email}";
 
             await SendResetEmail(email, resetLink);
 
