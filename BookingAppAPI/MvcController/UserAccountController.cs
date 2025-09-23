@@ -1,16 +1,20 @@
 ﻿using BookingAppAPI.DB;
+using BookingAppAPI.DB.Models.User;
 using BookingAppAPI.ViewModels;
 using Bpst.API.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace BookingAppAPI.MvcController
 {
+
     public class UserAccountController : Controller
     {
 
         private readonly AppDbContext _context;
-
         public UserAccountController(AppDbContext context)
         {
             _context = context;
@@ -21,9 +25,86 @@ namespace BookingAppAPI.MvcController
             return View();
         }
 
-        public IActionResult Login()
+        public IActionResult AdminLogin()
         {
             return View();
+        }
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear(); 
+            return RedirectToAction("Login", "UserAccount");
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginVM model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.LoginEmail == model.LoginName);
+
+            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash) ||
+                user.Roles == null || !user.Roles.Contains("Admin"))
+            {
+                ModelState.AddModelError("", "Invalid Email Id or Password");
+                return View(model);
+            }
+
+            HttpContext.Session.SetString("UserEmail", user.LoginEmail);
+            HttpContext.Session.SetString("UserRole", "Admin");
+
+            return RedirectToAction("Index", "Service");
+        }
+
+
+
+        public async Task<string> CreateMasterUser()
+        {
+            var resultStr = string.Empty;
+
+            try
+            {
+                string email = "askrashid05@gmail.com";
+
+                var exists = await _context.AppUsers.AnyAsync(u => u.LoginEmail == email);
+                if (exists)
+                    return "Master user already exists.";
+
+                var appUser = new AppUser
+                {
+                    LoginEmail = email,
+                    Email = email,
+                    FirstName = "Rashid",
+                    LastName = "Bahattab",
+                    PhoneNumber = "1551941751",
+                    CreatedDate = DateTime.UtcNow,
+                    LastUpdatedDate = DateTime.UtcNow,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("AskRashid@1974#")
+                };
+
+                _context.AppUsers.Add(appUser);
+                await _context.SaveChangesAsync();
+
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                if (adminRole == null)
+                {
+                    adminRole = new Roles { RoleName = "Admin" };
+                    _context.Roles.Add(adminRole);
+                    await _context.SaveChangesAsync();
+                }
+
+                appUser.Roles = new List<string> { adminRole.RoleName };
+                _context.AppUsers.Update(appUser);
+                await _context.SaveChangesAsync();
+
+                resultStr = "✅ Master User Created Successfully with Admin role.";
+            }
+            catch (Exception ex)
+            {
+                resultStr = "❌ Some Error: " + ex.Message;
+            }
+
+            return resultStr;
         }
 
         public async Task<IActionResult> ResetPassword(string token, string email)

@@ -190,9 +190,74 @@ namespace BookingAppAPI.Controllers
 
                 var message = new MailMessage("askrashid04@gmail.com", recipientEmail)
                 {
-                    Subject = "Welcome to Ask Rashid!",
-                    Body = $"Click the link below to reset your password (valid for 5 minutes):\n{resetLink}",
-
+                    Subject = "Reset Your Password - Ask Rashid",
+                    IsBodyHtml = true,  
+                    Body = $@"
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+    }}
+    .container {{
+        max-width: 500px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }}
+    .logo {{
+        width: 120px;
+        margin-bottom: 20px;
+    }}
+    h2 {{
+        color: #333;
+    }}
+    p {{
+        color: #555;
+        font-size: 14px;
+        line-height: 1.6;
+    }}
+    .button {{
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        background-color: #007BFF;
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        text-decoration: none;
+        border-radius: 6px;
+    }}
+    .button:hover {{
+        background-color: #0056b3;
+    }}
+    .footer {{
+        margin-top: 20px;
+        font-size: 12px;
+        color: #999;
+    }}
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <h2>Password Reset Request</h2>
+    <p>Hello,</p>
+    <p>We received a request to reset your password for your Ask Rashid account.</p>
+    <p>Click the button below to reset your password. This link is valid for <b>5 minutes</b>.</p>
+    <a href='{resetLink}' class='button'>Reset Password</a>
+    <div class='footer'>
+      <p>If you did not request a password reset, please ignore this email.</p>
+      <p>© {DateTime.Now.Year} Ask Rashid. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>"
                 };
 
                 try
@@ -204,8 +269,8 @@ namespace BookingAppAPI.Controllers
                     Console.WriteLine(ex.Message);
                 }
             }
-
         }
+
         private bool ServicesExists(int id)
         {
             return _context.Services.Any(e => e.UniqueId == id);

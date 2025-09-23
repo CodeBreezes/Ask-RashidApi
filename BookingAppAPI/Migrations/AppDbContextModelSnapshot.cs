@@ -55,7 +55,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("Booking");
+                    b.ToTable("Booking", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Address.City", b =>
@@ -77,7 +77,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasIndex("StateId");
 
-                    b.ToTable("Cities");
+                    b.ToTable("Cities", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Address.Country", b =>
@@ -94,7 +94,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasKey("UniqueId");
 
-                    b.ToTable("Countries");
+                    b.ToTable("Countries", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Address.State", b =>
@@ -116,7 +116,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasIndex("CountryId");
 
-                    b.ToTable("States");
+                    b.ToTable("States", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Bulletins", b =>
@@ -147,7 +147,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasIndex("SubtopicId");
 
-                    b.ToTable("Bulletins");
+                    b.ToTable("Bulletins", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Feedback", b =>
@@ -179,7 +179,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Feedbacks");
+                    b.ToTable("Feedbacks", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Payment", b =>
@@ -228,7 +228,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.Subtopics", b =>
@@ -256,7 +256,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("Subtopics");
+                    b.ToTable("Subtopics", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.User.AppUser", b =>
@@ -326,7 +326,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasKey("UniqueId");
 
-                    b.ToTable("AppUsers");
+                    b.ToTable("AppUsers", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Models.User.Roles", b =>
@@ -343,7 +343,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasKey("UniqueId");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
 
                     b.HasData(
                         new
@@ -387,7 +387,7 @@ namespace BookingAppAPI.Migrations
 
                     b.HasKey("UniqueId");
 
-                    b.ToTable("Services");
+                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("BookingAppAPI.DB.Booking", b =>
