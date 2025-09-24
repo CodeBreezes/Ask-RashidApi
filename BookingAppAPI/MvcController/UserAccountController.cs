@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 
 namespace BookingAppAPI.MvcController
@@ -56,7 +57,30 @@ namespace BookingAppAPI.MvcController
             return RedirectToAction("Index", "Service");
         }
 
+        public async Task<IActionResult> DeleteAccount(string token, string email)
+        {
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+                return Content("Invalid link");
 
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u =>
+                    u.LoginEmail == email &&
+                    u.ResetToken == token);
+
+            if (user == null)
+                return Content("Invalid reset link.");
+
+            if (user.ResetTokenExpiry < DateTime.UtcNow)
+                return Content("Reset link has expired.");
+
+            var model = new ResetPasswordViewModel
+            {
+                Token = token,
+                Email = email
+            };
+
+            return View(model);
+        }
 
         public async Task<string> CreateMasterUser()
         {
@@ -130,6 +154,53 @@ namespace BookingAppAPI.MvcController
             };
 
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAccount(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var result = new UpdateResponse
+            {
+                IsUpdated = false,
+                ErrorMessages = new List<string>(),
+                SuccessMessages = new List<string>()
+            };
+
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.LoginEmail == model.Email && u.ResetToken == model.Token);
+
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid email or token.");
+                return View(model);
+            }
+
+            if (user.ResetTokenExpiry < DateTime.UtcNow)
+            {
+                ModelState.AddModelError(string.Empty, "Reset link has expired.");
+                return View(model);
+            }
+
+            try
+            {
+                _context.AppUsers.Remove(user);
+                await _context.SaveChangesAsync();
+
+                result.IsUpdated = true;
+                result.SuccessMessages.Add("Your account has been deleted successfully!");
+
+                ViewBag.SuccessMessage = "Your account has been deleted successfully!";
+                return View("DeleteAccountConfirmation"); 
+            }
+            catch (Exception ex)
+            {
+                result.ErrorMessages.Add("An error occurred while deleting the account: " + ex.Message);
+                ModelState.AddModelError(string.Empty, "An error occurred while deleting the account.");
+                return View(model);
+            }
         }
 
         [HttpPost]

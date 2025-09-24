@@ -9,6 +9,7 @@ using BookingAppAPI.DB;
 using Microsoft.AspNetCore.Authorization;
 using System.Net.Mail;
 using System.Net;
+using Stripe;
 
 namespace BookingAppAPI.Controllers
 {
@@ -156,6 +157,29 @@ namespace BookingAppAPI.Controllers
 
             return NoContent();
         }
+        [HttpPost("DeleteAccount")]
+        public async Task<IActionResult> DeleteAccount(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest("Email is required.");
+
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.LoginEmail == email);
+            if (user == null)
+                return NotFound("User not found.");
+
+            var token = Guid.NewGuid().ToString();
+            var expiry = DateTime.UtcNow.AddMinutes(5);
+
+            user.ResetToken = token;
+            user.ResetTokenExpiry = expiry;
+            await _context.SaveChangesAsync();
+
+            string resetLink = $"http://appointment.bitprosofttech.com/UserAccount/DeleteAccount?token={token}&email={email}";
+
+            await SendDeleteAccountEmail(email, resetLink);
+
+            return Ok("Email sent successfully.");
+        }
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword(string email)
         {
@@ -169,7 +193,6 @@ namespace BookingAppAPI.Controllers
             var token = Guid.NewGuid().ToString();
             var expiry = DateTime.UtcNow.AddMinutes(5);
 
-            // Save token & expiry to database
             user.ResetToken = token;
             user.ResetTokenExpiry = expiry;
             await _context.SaveChangesAsync();
@@ -191,73 +214,33 @@ namespace BookingAppAPI.Controllers
                 var message = new MailMessage("askrashid04@gmail.com", recipientEmail)
                 {
                     Subject = "Reset Your Password - Ask Rashid",
-                    IsBodyHtml = true,  
-                    Body = $@"
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body {{
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        padding: 20px;
-    }}
-    .container {{
-        max-width: 500px;
-        margin: 0 auto;
-        background: #fff;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        text-align: center;
-    }}
-    .logo {{
-        width: 120px;
-        margin-bottom: 20px;
-    }}
-    h2 {{
-        color: #333;
-    }}
-    p {{
-        color: #555;
-        font-size: 14px;
-        line-height: 1.6;
-    }}
-    .button {{
-        display: inline-block;
-        margin-top: 20px;
-        padding: 12px 24px;
-        background-color: #007BFF;
-        color: #fff;
-        font-size: 16px;
-        font-weight: bold;
-        text-decoration: none;
-        border-radius: 6px;
-    }}
-    .button:hover {{
-        background-color: #0056b3;
-    }}
-    .footer {{
-        margin-top: 20px;
-        font-size: 12px;
-        color: #999;
-    }}
-  </style>
-</head>
-<body>
-  <div class='container'>
-    <h2>Password Reset Request</h2>
-    <p>Hello,</p>
-    <p>We received a request to reset your password for your Ask Rashid account.</p>
-    <p>Click the button below to reset your password. This link is valid for <b>5 minutes</b>.</p>
-    <a href='{resetLink}' class='button'>Reset Password</a>
-    <div class='footer'>
-      <p>If you did not request a password reset, please ignore this email.</p>
-      <p>© {DateTime.Now.Year} Ask Rashid. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>"
+                    Body = $"Click the link below to reset your password (valid for 5 minutes):\n{resetLink}"
+
+                };
+
+                try
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+        private async Task SendDeleteAccountEmail(string recipientEmail, string deleteLink)
+        {
+            using (var smtpClient = new SmtpClient("smtp.gmail.com"))
+            {
+                smtpClient.Port = 587;
+                smtpClient.Credentials = new NetworkCredential("askrashid04@gmail.com", "kxgl wgwb zjkq elhv");  
+                smtpClient.EnableSsl = true;
+
+                var message = new MailMessage("askrashid04@gmail.com", recipientEmail)
+                {
+                    Subject = "Confirm Account Deletion - Ask Rashid",
+                    Body = $"Click the link below to Delete your Account (valid for 5 minutes):\n{deleteLink}"
+
                 };
 
                 try
