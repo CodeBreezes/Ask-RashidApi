@@ -9,6 +9,8 @@ using BookingAppAPI.DB;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.CodeAnalysis.Host.Mef;
 using BookingAppAPI.DB.Models;
+using System.Net.Mail;
+using System.Net;
 
 namespace BookingAppAPI.MvcController
 {
@@ -217,7 +219,58 @@ namespace BookingAppAPI.MvcController
         {
             return View();
         }
+        public IActionResult DeleteAccount()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> DeleteAccount(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest("Email is required.");
 
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.LoginEmail == email);
+            if (user == null)
+                return NotFound("User not found.");
+
+            var token = Guid.NewGuid().ToString();
+            var expiry = DateTime.UtcNow.AddMinutes(5);
+
+            user.ResetToken = token;
+            user.ResetTokenExpiry = expiry;
+            await _context.SaveChangesAsync();
+
+            string resetLink = $"http://appointment.bitprosofttech.com/UserAccount/DeleteAccount?token={token}&email={email}";
+
+            await SendDeleteAccountEmail(email, resetLink);
+
+            return Ok("Email sent successfully.");
+        }
+        private async Task SendDeleteAccountEmail(string recipientEmail, string deleteLink)
+        {
+            using (var smtpClient = new SmtpClient("smtp.gmail.com"))
+            {
+                smtpClient.Port = 587;
+                smtpClient.Credentials = new NetworkCredential("askrashid04@gmail.com", "kxgl wgwb zjkq elhv");
+                smtpClient.EnableSsl = true;
+
+                var message = new MailMessage("askrashid04@gmail.com", recipientEmail)
+                {
+                    Subject = "Confirm Account Deletion - Ask Rashid",
+                    Body = $"Click the link below to Delete your Account (valid for 5 minutes):\n{deleteLink}"
+
+                };
+
+                try
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
         public IActionResult PrivacyPolicy()
         {
             return View();
