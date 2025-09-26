@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Stripe;
+using BookingAppAPI.ViewModels;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace BookingAppApi.Controllers
 {
@@ -25,12 +27,15 @@ namespace BookingAppApi.Controllers
         // GET: Bookings
         public async Task<IActionResult> Index(string filter, int? serviceId)
         {
-            var bookingsQuery = _context.Booking.Include(b => b.Service).AsQueryable();
+            var bookingsQuery = _context.Booking
+                .Include(b => b.Service)
+              
+                .AsQueryable();
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
 
             if (!string.IsNullOrEmpty(filter))
             {
-                var today = DateOnly.FromDateTime(DateTime.Today);
-
                 switch (filter)
                 {
                     case "today":
@@ -51,34 +56,69 @@ namespace BookingAppApi.Controllers
                         bookingsQuery = bookingsQuery.Where(b => b.StartedDate.Year == today.Year);
                         break;
                 }
-
-                ViewBag.Filter = filter;
             }
-
 
             if (serviceId.HasValue)
             {
                 bookingsQuery = bookingsQuery.Where(b => b.ServiceId == serviceId.Value);
             }
 
+            // ✅ ensure proper ordering by date + time
+            bookingsQuery = bookingsQuery
+                .OrderByDescending(b => b.StartedDate)
+                .ThenByDescending(b => b.StartedTime);
+
             ViewBag.Filter = filter;
             ViewBag.ServiceId = serviceId;
-        
             ViewBag.Services = await _context.Services.ToListAsync();
-
 
             return View(await bookingsQuery.ToListAsync());
         }
 
+public async Task<IActionResult> Details(int id)
+    {
+        // Booking fetch karo
+        var booking = await _context.Booking
+            .Include(b => b.Service)
+            .FirstOrDefaultAsync(b => b.UniqueId == id);
 
-        public async Task<IActionResult> Details(int id)
+        if (booking == null) return NotFound();
+
+        // User fetch karo separately
+        var user = await _context.AppUsers
+            .FirstOrDefaultAsync(u => u.UniqueId == booking.UserId);
+
+        if (user == null) return NotFound();
+
+        // Map to ViewModel
+        var model = new BookingDetailsViewModel
         {
-            var booking = await _context.Booking.FirstOrDefaultAsync(b => b.UniqueId == id);
-            if (booking == null) return NotFound();
-            return View(booking);
-        }
+            // Booking info
+            UniqueId = booking.UniqueId,
+            ServiceName = booking.Service?.Name ?? "",
+            StartedDate = booking.StartedDate,
+            StartedTime = booking.StartedTime,
+            EndedDate = booking.EndedDate,
+            Topic = booking.Topic,
+            Notes = booking.Notes,
 
-        public async Task<IActionResult> Delete(int id)
+            // User info
+            UserUniqueId = user.UniqueId,
+            FullName = user.FullName,
+            PhoneNumber = user.PhoneNumber,
+            Email = user.Email,
+            DateOfBirth = user.DateOfBirth,
+            Gender = user.Gender,
+            ProfileImageUrl = user.ProfileImageUrl,
+            Address = user.Address
+        };
+
+        return View(model);
+    }
+
+
+
+    public async Task<IActionResult> Delete(int id)
         {
             var booking = await _context.Booking.FindAsync(id);
             if (booking == null) return NotFound();
@@ -87,10 +127,9 @@ namespace BookingAppApi.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+    
 
-
-
-            public async Task<IActionResult> Payment(string searchString, string sortOrder, DateTime? startDate, DateTime? endDate)
+           public async Task<IActionResult> Payment(string searchString, string sortOrder, DateTime? startDate, DateTime? endDate)
             {
                 ViewData["CurrentFilter"] = searchString;
                 ViewData["CurrentSort"] = sortOrder;

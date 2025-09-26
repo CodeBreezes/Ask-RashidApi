@@ -34,7 +34,7 @@
                         }
                     </select>
                 </div>
-                
+
                 <div class="col-auto">
                     <button type="submit" class="btn btn-light btn-sm mt-3">
                         <i class="bi bi-filter me-1"></i> Apply
@@ -51,8 +51,9 @@
                         <th>Service</th>
                         <th>Date</th>
                         <th>Time</th>
+
                         <th>Topic</th>
-                        <th>Notes</th>
+                       @*  <th>Notes</th>  *@
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -65,10 +66,19 @@
                             <tr>
                                 <td class="text-center">@index</td>
                                 <td>@booking.Service?.Name</td>
-                                <td>@booking.StartedDate.ToString("dd MMM yyyy")</td>
-                                <td>@booking.StartedTime.ToString(@"hh\:mm")</td>
-                                <td>@booking.Topic</td>
-                                <td>@booking.Notes</td>
+
+                                <!-- ✅ proper sorting using data-order -->
+                                <td class="no-break" data-order="@booking.StartedDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd")">
+                                    @booking.StartedDate.ToString("dd MMM yyyy")
+                                </td>
+
+
+                                <!-- ✅ 24-hour format -->
+                                <td data-order="@booking.StartedTime.ToString()">
+                                    @booking.StartedTime.ToString(@"HH\:mm")
+                                </td>
+                               <td>@booking.Topic</td>
+                              @*   <td>@booking.Notes</td>  *@
                                 <td class="text-end">
                                     <a asp-action="Details" asp-route-id="@booking.UniqueId" class="text-primary me-2" title="View"><i class="fa fa-eye"></i></a>
                                     <a asp-action="Delete" asp-route-id="@booking.UniqueId"
@@ -81,7 +91,6 @@
                             index++;
                         }
                     }
-                    <!-- If no bookings, keep tbody empty and let DataTables show empty message -->
                 </tbody>
             </table>
         </div>
@@ -99,10 +108,14 @@
             $('#tblBookings').DataTable({
                 pageLength: 10,
                 ordering: true,
+                order: [[2, 'desc'], [3, 'desc']], // ✅ sort by date then time
                 language: {
                     search: "🔍 Search bookings:",
                     emptyTable: "No bookings found for selected filters."
-                }
+                },
+                columnDefs: [
+                    { targets: [0, 2, 3], className: 'text-center' }
+                ]
             });
         });
     </script>
