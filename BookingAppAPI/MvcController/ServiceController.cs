@@ -240,7 +240,7 @@ namespace BookingAppAPI.MvcController
             user.ResetTokenExpiry = expiry;
             await _context.SaveChangesAsync();
 
-            string resetLink = $"http://appointment.bitprosofttech.com/UserAccount/DeleteAccount?token={token}&email={email}";
+            string resetLink = $"https://askrashid.grahak.online/UserAccount/DeleteAccount?token={token}&email={email}";
 
             await SendDeleteAccountEmail(email, resetLink);
 

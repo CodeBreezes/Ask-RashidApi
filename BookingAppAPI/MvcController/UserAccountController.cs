@@ -193,7 +193,7 @@ namespace BookingAppAPI.MvcController
                 result.SuccessMessages.Add("Your account has been deleted successfully!");
 
                 ViewBag.SuccessMessage = "Your account has been deleted successfully!";
-                return View("DeleteAccountConfirmation"); 
+                return View();
             }
             catch (Exception ex)
             {

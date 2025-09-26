@@ -174,11 +174,11 @@ namespace BookingAppAPI.Controllers
             user.ResetTokenExpiry = expiry;
             await _context.SaveChangesAsync();
 
-            string resetLink = $"http://appointment.bitprosofttech.com/UserAccount/DeleteAccount?token={token}&email={email}";
+            string resetLink = $"https://askrashid.grahak.online/UserAccount/DeleteAccount?token={token}&email={email}";
 
             await SendDeleteAccountEmail(email, resetLink);
+            return Ok("A link has been sent to your registered email. Please check your inbox to delete your account.");
 
-            return Ok("Email sent successfully.");
         }
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword(string email)
@@ -197,7 +197,7 @@ namespace BookingAppAPI.Controllers
             user.ResetTokenExpiry = expiry;
             await _context.SaveChangesAsync();
 
-            string resetLink = $"http://appointment.bitprosofttech.com/UserAccount/ResetPassword?token={token}&email={email}";
+            string resetLink = $"https://askrashid.grahak.online/UserAccount/ResetPassword?token={token}&email={email}";
 
             await SendResetEmail(email, resetLink);
 
