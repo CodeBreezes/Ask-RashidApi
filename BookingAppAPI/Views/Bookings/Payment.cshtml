@@ -1,50 +1,67 @@
-﻿@model IEnumerable<BookingAppAPI.DB.Models.Payment>
+﻿@model IEnumerable<BookingAppAPI.ViewModels.PaymentViewModel>
 
 @{
     ViewData["Title"] = "All Payments";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.ActiveTabName = "Payment";
-    var selectedFilter = ViewBag.Filter as string ?? "";
+
+    var currentFilter = ViewData["CurrentFilter"] as string ?? "";
+    var filterValue = ViewBag.Filter as string ?? "";
+
+    var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
 }
 
-<div class="content px-1">
+<div class="container mt-4">
     <div class="card shadow rounded-3">
-        <div class="card-header bg-primary text-white rounded-top-3 d-flex flex-wrap justify-content-between align-items-center">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0">All Payments</h4>
 
-            <form method="get" asp-action="Payment" class="row gx-2 gy-1 align-items-end m-0">
-                <div class="col-auto">
-                    <label for="filterOption" class="form-label text-white mb-0">Filter</label>
-                    <select name="filter" id="filterOption" class="form-select form-select-sm">
-                        <option value="" selected="@(selectedFilter == "" ? "selected" : null)">-- All Payments --</option>
-                        <option value="today" selected="@(selectedFilter == "today" ? "selected" : null)">Today</option>
-                        <option value="thisWeek" selected="@(selectedFilter == "thisWeek" ? "selected" : null)">This Week</option>
-                        <option value="thisMonth" selected="@(selectedFilter == "thisMonth" ? "selected" : null)">This Month</option>
-                        <option value="thisYear" selected="@(selectedFilter == "thisYear" ? "selected" : null)">This Year</option>
-                    </select>
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-light btn-sm mt-3">
-                        <i class="bi bi-filter me-1"></i> Apply
-                    </button>
-                </div>
-            </form>        </div>
+            <form method="get" asp-action="Payment" class="d-flex align-items-end">
+                <input type="text" name="searchString" class="form-control form-control-sm me-2"
+                       placeholder="Search..." value="@currentFilter" />
+
+                <select name="filter" class="form-select form-select-sm me-2">
+                    <option value="">-- All Payments --</option>
+
+                    @{
+                        var options = new Dictionary<string, string>
+                    {
+                    { "today", "Today" },
+                    { "thisWeek", "This Week" },
+                    { "thisMonth", "This Month" },
+                    { "thisYear", "This Year" }
+                    };
+                    }
+
+                    @foreach (var opt in options)
+                    {
+                        if (filterValue == opt.Key)
+                        {
+                            <option value="@opt.Key" selected>@opt.Value</option>
+                        }
+                        else
+                        {
+                            <option value="@opt.Key">@opt.Value</option>
+                        }
+                    }
+                </select>
+
+                <button type="submit" class="btn btn-light btn-sm">Apply</button>
+            </form>
+        </div>
 
         <div class="table-responsive p-2">
-            <table class="table table-hover table-striped table-bordered align-middle mb-0" id="tblPayments">
+            <table class="table table-hover table-striped table-bordered align-middle" id="tblPayments">
                 <thead class="table-light text-center">
                     <tr>
-                        <th>#</th>
+                        <th>Sr.No</th>
                         <th>Customer</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Amount</th>
-                        <th>Currency</th>
-                        <th>Description</th>
-                        <th>Created At</th>
-                        <th>Booking ID</th>
-                        <th>Service ID</th>
-                        <th>User ID</th>
+                        <th>Amount (AED)</th>
+                        <th>Payment Date</th>
+                        <th>Service</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,18 +69,23 @@
                         int index = 1;
                         foreach (var p in Model)
                         {
+                            var uaeTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(p.CreatedAt, uaeTimeZone.Id);
                             <tr>
                                 <td class="text-center">@index</td>
                                 <td>@p.CustomerName</td>
                                 <td>@p.Email</td>
                                 <td>@p.PhoneNumber</td>
-                                <td>@p.Amount</td>
-                                <td>@p.Currency</td>
-                                <td>@p.Description</td>
-                                <td>@p.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</td>
-                                <td>@p.BookingId</td>
-                                <td>@p.ServiceId</td>
-                                <td>@p.userId</td>
+                                <td>@p.Amount @p.Currency</td>
+                                <td data-order="@uaeTime.ToString("yyyyMMddHHmmss")">
+                                    @uaeTime.ToString("dd MMM yyyy, hh:mm tt")
+                                </td>
+                                <td>@p.ServiceName</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-primary view-details"
+                                            data-payment='@Newtonsoft.Json.JsonConvert.SerializeObject(p)'>
+                                        View
+                                    </button>
+                                </td>
                             </tr>
                             index++;
                         }
@@ -74,20 +96,67 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         $(document).ready(function () {
-            $('#tblPayments').DataTable({
+            var table = $('#tblPayments').DataTable({
                 "pageLength": 10,
                 "ordering": true,
-                "language": {
-                    "search": "🔍 Search payments:"
-                }
+                "order": [[5, "desc"]], // Sort by Payment Date (UAE)
+                "language": { "search": "🔍 Search payments:" }
+            });
+
+            $('.view-details').click(function () {
+                var payment = $(this).data('payment');
+
+                // Client-side UAE time
+                var createdAt = new Date(payment.CreatedAt);
+                var uaeOffset = 4 * 60; // GMT+4
+                var uaeTime = new Date(createdAt.getTime() + (uaeOffset - createdAt.getTimezoneOffset()) * 60000);
+
+                var html = `
+                    <h5>Payment Info</h5>
+                    <table class="table table-bordered">
+                       <tr>th>BookingId</th><td>{payment.bookingId}</td></tr>
+                        <tr><th>Customer Name</th><td>${payment.CustomerName}</td></tr>
+                        <tr><th>Email</th><td>${payment.Email ?? ''}</td></tr>
+                           <tr><th>Gender</th><td>${payment.Gender ?? ''}</td></tr>
+                        <tr><th>Phone</th><td>${payment.PhoneNumber ?? ''}</td></tr>
+                        <tr><th>Amount</th><td>${payment.Amount} ${payment.Currency}</td></tr>
+                        <tr><th>Payment Date</th><td>${uaeTime.toLocaleString('en-GB', { hour12: true })}</td></tr>
+                        <tr><th>Service</th><td>${payment.ServiceName}</td></tr>
+                    
+                       <tr><th>Description</th><td>${payment.Description}</td></tr>
+                     
+                        <tr><th>Address</th><td>${payment.Address ?? ''}</td></tr>
+                       
+                    </table>
+                `;
+
+                $('#modalContent').html(html);
+                var modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+                modal.show();
             });
         });
     </script>

@@ -1,0 +1,62 @@
+﻿@model BookingAppAPI.ViewModels.PaymentViewModel
+
+@{
+    ViewData["Title"] = "Payment Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow rounded-3 p-3">
+        <h4 class="mb-3">Payment Details</h4>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h5>Payment Info</h5>
+                <p><strong>Customer Name:</strong> @Model.CustomerName</p>
+                <p><strong>Email:</strong> @Model.Email</p>
+                <p><strong>Phone:</strong> @Model.PhoneNumber</p>
+                <p><strong>Amount:</strong> @Model.Amount @Model.Currency</p>
+                <p><strong>Description:</strong> @Model.Description</p>
+                <p><strong>Payment Date:</strong> @Model.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</p>
+                <p><strong>Payment Intent:</strong> @Model.StripePaymentIntentId</p>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Booking & Service Info</h5>
+                <p><strong>Booking ID:</strong> @(string.IsNullOrEmpty(Model.BookingId) ? "Deleted" : Model.BookingId)</p>
+                <p><strong>Service Name:</strong> @(string.IsNullOrEmpty(Model.ServiceName) ? "Removed" : Model.ServiceName)</p>
+                <p><strong>Service ID:</strong> @(Model.ServiceId ?? 0)</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h5>User Info</h5>
+                <p><strong>Unique ID:</strong> @Model.UserUniqueId</p>
+                <p><strong>Full Name:</strong> @Model.FullName</p>
+                <p><strong>Email:</strong> @Model.UserEmail</p>
+                <p><strong>Phone:</strong> @Model.UserPhoneNumber</p>
+                <p><strong>DOB:</strong> @Model.DateOfBirth?.ToString("dd MMM yyyy")</p>
+                <p><strong>Gender:</strong> @Model.Gender</p>
+                <p><strong>Address:</strong> @Model.Address</p>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Profile Image</h5>
+                @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                {
+                    <img src="@Url.Content("~/UserProfiles/" + Model.ProfileImageUrl)"
+                         class="rounded-circle" width="150" />
+                }
+                else
+                {
+                    <img src="~/images/default-profile.png" class="rounded-circle" width="150" />
+                }
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <a asp-action="Index" class="btn btn-secondary">Back to Payments</a>
+        </div>
+    </div>
+</div>

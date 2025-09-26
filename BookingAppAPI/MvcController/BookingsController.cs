@@ -21,7 +21,8 @@ namespace BookingAppApi.Controllers
 
 
         public IActionResult Create()
-        { return View();
+        {
+            return View();
         }
 
         // GET: Bookings
@@ -29,7 +30,7 @@ namespace BookingAppApi.Controllers
         {
             var bookingsQuery = _context.Booking
                 .Include(b => b.Service)
-              
+
                 .AsQueryable();
 
             var today = DateOnly.FromDateTime(DateTime.Today);
@@ -75,50 +76,50 @@ namespace BookingAppApi.Controllers
             return View(await bookingsQuery.ToListAsync());
         }
 
-public async Task<IActionResult> Details(int id)
-    {
-        // Booking fetch karo
-        var booking = await _context.Booking
-            .Include(b => b.Service)
-            .FirstOrDefaultAsync(b => b.UniqueId == id);
-
-        if (booking == null) return NotFound();
-
-        // User fetch karo separately
-        var user = await _context.AppUsers
-            .FirstOrDefaultAsync(u => u.UniqueId == booking.UserId);
-
-        if (user == null) return NotFound();
-
-        // Map to ViewModel
-        var model = new BookingDetailsViewModel
+        public async Task<IActionResult> Details(int id)
         {
-            // Booking info
-            UniqueId = booking.UniqueId,
-            ServiceName = booking.Service?.Name ?? "",
-            StartedDate = booking.StartedDate,
-            StartedTime = booking.StartedTime,
-            EndedDate = booking.EndedDate,
-            Topic = booking.Topic,
-            Notes = booking.Notes,
+            // Booking fetch karo
+            var booking = await _context.Booking
+                .Include(b => b.Service)
+                .FirstOrDefaultAsync(b => b.UniqueId == id);
 
-            // User info
-            UserUniqueId = user.UniqueId,
-            FullName = user.FullName,
-            PhoneNumber = user.PhoneNumber,
-            Email = user.Email,
-            DateOfBirth = user.DateOfBirth,
-            Gender = user.Gender,
-            ProfileImageUrl = user.ProfileImageUrl,
-            Address = user.Address
-        };
+            if (booking == null) return NotFound();
 
-        return View(model);
-    }
+            // User fetch karo separately
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.UniqueId == booking.UserId);
+
+            if (user == null) return NotFound();
+
+            // Map to ViewModel
+            var model = new BookingDetailsViewModel
+            {
+                // Booking info
+                UniqueId = booking.UniqueId,
+                ServiceName = booking.Service?.Name ?? "",
+                StartedDate = booking.StartedDate,
+                StartedTime = booking.StartedTime,
+                EndedDate = booking.EndedDate,
+                Topic = booking.Topic,
+                Notes = booking.Notes,
+
+                // User info
+                UserUniqueId = user.UniqueId,
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender,
+                ProfileImageUrl = user.ProfileImageUrl,
+                Address = user.Address
+            };
+
+            return View(model);
+        }
 
 
 
-    public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var booking = await _context.Booking.FindAsync(id);
             if (booking == null) return NotFound();
@@ -127,60 +128,145 @@ public async Task<IActionResult> Details(int id)
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-    
 
-           public async Task<IActionResult> Payment(string searchString, string sortOrder, DateTime? startDate, DateTime? endDate)
+          
+
+            // ===============================
+            // INDEX: Basic Payments
+            // ===============================
+          
+            // ===============================
+            public async Task<IActionResult> Payment(string searchString, string sortOrder, string filter)
             {
-                ViewData["CurrentFilter"] = searchString;
-                ViewData["CurrentSort"] = sortOrder;
-                ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
-                ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
+            ViewBag.Filter = filter ?? "";
+            ViewData["CurrentSort"] = sortOrder;
 
-                var payments = _context.Payments.AsQueryable();
+                var payments = await _context.Payments.ToListAsync();
 
-                // 🔍 Search logic
+                var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time"); // GMT+4
+
+                var paymentVMs = payments.Select(p =>
+                {
+                    var service = p.ServiceId.HasValue ? _context.Services.FirstOrDefault(s => s.UniqueId == p.ServiceId.Value) : null;
+                    var user = p.userId.HasValue ? _context.AppUsers.FirstOrDefault(u => u.UniqueId == p.userId.Value) : null;
+
+                    return new PaymentViewModel
+                    {
+                        Id = p.Id,
+                        CustomerName = p.CustomerName,
+                        Email = p.Email,
+                        PhoneNumber = p.PhoneNumber,
+                        Amount = p.Amount,
+                        Currency = "AED",
+                        Description = p.Description,
+                        CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(p.CreatedAt, uaeTimeZone),
+                        BookingId = p.BookingId,
+                        ServiceId = p.ServiceId,
+                        ServiceName = service?.Name ?? "Removed",
+                        UserId = p.userId,
+                        UserUniqueId = user?.UniqueId ?? 0,
+                        FullName = user?.FullName ?? "",
+                        UserPhoneNumber = user?.PhoneNumber,
+                        UserEmail = user?.Email,
+                        DateOfBirth = user?.DateOfBirth,
+                        Gender = user?.Gender,
+                        ProfileImageUrl = user?.ProfileImageUrl,
+                        Address = user?.Address
+                    };
+                }).AsQueryable();
+
+                // 🔍 Search
                 if (!string.IsNullOrEmpty(searchString))
                 {
-                    payments = payments.Where(p =>
-                        p.CustomerName.Contains(searchString) ||
-                        p.Email.Contains(searchString) ||
-                        p.PhoneNumber.Contains(searchString) ||
-                        p.BookingId.Contains(searchString));
+                    paymentVMs = paymentVMs.Where(p =>
+                        p.CustomerName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+                        (p.Email != null && p.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+                        (p.PhoneNumber != null && p.PhoneNumber.Contains(searchString)) ||
+                        (p.BookingId != null && p.BookingId.Contains(searchString)) ||
+                        p.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                    );
                 }
 
-                // 📅 Filter by date
-                if (startDate.HasValue)
+                // 📅 Filter
+                if (!string.IsNullOrEmpty(filter))
                 {
-                    payments = payments.Where(p => p.CreatedAt >= startDate.Value);
+                    switch (filter)
+                    {
+                        case "today":
+                            paymentVMs = paymentVMs.Where(p => p.CreatedAt.Date == DateTime.UtcNow.AddHours(4).Date);
+                            break;
+                        case "thisWeek":
+                            var now = DateTime.UtcNow.AddHours(4);
+                            int diff = (int)now.DayOfWeek;
+                            var weekStart = now.AddDays(-diff);
+                            var weekEnd = weekStart.AddDays(7).AddSeconds(-1);
+                            paymentVMs = paymentVMs.Where(p => p.CreatedAt >= weekStart && p.CreatedAt <= weekEnd);
+                            break;
+                        case "thisMonth":
+                            var today = DateTime.UtcNow.AddHours(4);
+                            paymentVMs = paymentVMs.Where(p => p.CreatedAt.Month == today.Month && p.CreatedAt.Year == today.Year);
+                            break;
+                        case "thisYear":
+                            var current = DateTime.UtcNow.AddHours(4);
+                            paymentVMs = paymentVMs.Where(p => p.CreatedAt.Year == current.Year);
+                            break;
+                    }
                 }
 
-                if (endDate.HasValue)
+                // ↕️ Sort
+                paymentVMs = sortOrder switch
                 {
-                    payments = payments.Where(p => p.CreatedAt <= endDate.Value);
-                }
+                    "date_desc" => paymentVMs.OrderByDescending(p => p.CreatedAt),
+                    "Date" => paymentVMs.OrderBy(p => p.CreatedAt),
+                    _ => paymentVMs.OrderByDescending(p => p.CreatedAt)
+                };
 
-                // ↕️ Sorting
-                switch (sortOrder)
+                return View(paymentVMs.ToList());
+            }
+
+            // ===============================
+            // DETAILS: Full Payment Info
+            // ===============================
+            public async Task<IActionResult> PaymentDetails(int id)
+            {
+                var payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == id);
+                if (payment == null) return NotFound();
+
+                var service = payment.ServiceId.HasValue ? _context.Services.FirstOrDefault(s => s.UniqueId == payment.ServiceId.Value) : null;
+                var user = payment.userId.HasValue ? _context.AppUsers.FirstOrDefault(u => u.UniqueId == payment.userId.Value) : null;
+
+                var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time"); // GMT+4
+
+                var paymentVM = new PaymentViewModel
                 {
-                    case "name_desc":
-                        payments = payments.OrderByDescending(p => p.CustomerName);
-                        break;
-                    case "Date":
-                        payments = payments.OrderBy(p => p.CreatedAt);
-                        break;
-                    case "date_desc":
-                        payments = payments.OrderByDescending(p => p.CreatedAt);
-                        break;
-                    default:
-                        payments = payments.OrderBy(p => p.CustomerName);
-                        break;
-                }
+                    Id = payment.Id,
+                    CustomerName = payment.CustomerName,
+                    Email = payment.Email,
+                    PhoneNumber = payment.PhoneNumber,
+                    Amount = payment.Amount,
+                    Currency = "AED",
+                    Description = payment.Description,
+                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(payment.CreatedAt, uaeTimeZone),
+                    BookingId = payment.BookingId,
+                    ServiceId = payment.ServiceId,
+                    ServiceName = service?.Name ?? "Removed",
+                    UserId = payment.userId,
+                    UserUniqueId = user?.UniqueId ?? 0,
+                    FullName = user?.FullName ?? "",
+                    UserPhoneNumber = user?.PhoneNumber,
+                    UserEmail = user?.Email,
+                    DateOfBirth = user?.DateOfBirth,
+                    Gender = user?.Gender,
+                    ProfileImageUrl = user?.ProfileImageUrl,
+                    Address = user?.Address
+                };
 
-                var result = await payments.ToListAsync();
-                return View(result);
+                return View(paymentVM);
             }
         }
     }
+
+
 
 
 
