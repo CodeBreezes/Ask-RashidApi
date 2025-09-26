@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BookingAppAPI.Controllers
 {
@@ -17,55 +18,65 @@ namespace BookingAppAPI.Controllers
             _context = context;
         }
 
-        // GET: Feedbacks
-        public async Task<IActionResult> Index(string category, string search, string dateFilter)
+   
+        public IActionResult Index(string dateFilter, string category)
         {
             var feedbacks = _context.Feedbacks.AsQueryable();
 
-            // Filter by category
+            // Apply date filter
+            var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
+            var nowUae = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, uaeTimeZone);
+
+            if (!string.IsNullOrEmpty(dateFilter))
+            {
+                if (dateFilter == "today")
+                {
+                    feedbacks = feedbacks.Where(f =>
+                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Date == nowUae.Date);
+                }
+                else if (dateFilter == "thisWeek")
+                {
+                    var startOfWeek = nowUae.AddDays(-(int)nowUae.DayOfWeek);
+                    feedbacks = feedbacks.Where(f =>
+                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone) >= startOfWeek);
+                }
+                else if (dateFilter == "thisMonth")
+                {
+                    feedbacks = feedbacks.Where(f =>
+                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Month == nowUae.Month &&
+                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Year == nowUae.Year);
+                }
+                else if (dateFilter == "thisYear")
+                {
+                    feedbacks = feedbacks.Where(f =>
+                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Year == nowUae.Year);
+                }
+            }
+
+            // Apply category filter
             if (!string.IsNullOrEmpty(category))
             {
                 feedbacks = feedbacks.Where(f => f.Category == category);
             }
 
-            // Filter by search
-            if (!string.IsNullOrEmpty(search))
+            // Date filter dropdown
+            ViewBag.DateFilterOptions = new SelectList(new[]
             {
-                feedbacks = feedbacks.Where(f =>
-                    f.Name.Contains(search) ||
-                    f.Email.Contains(search) ||
-                    f.Message.Contains(search));
-            }
+            new { Value = "today", Text = "Today" },
+            new { Value = "thisWeek", Text = "This Week" },
+            new { Value = "thisMonth", Text = "This Month" },
+            new { Value = "thisYear", Text = "This Year" }
+        }, "Value", "Text", dateFilter);
 
-            // Filter by date
-            if (!string.IsNullOrEmpty(dateFilter))
-            {
-                var today = DateTime.UtcNow.Date;
-                switch (dateFilter)
-                {
-                    case "today":
-                        feedbacks = feedbacks.Where(f => f.CreatedDate.Date == today);
-                        break;
-                    case "thisWeek":
-                        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
-                        feedbacks = feedbacks.Where(f => f.CreatedDate.Date >= startOfWeek);
-                        break;
-                    case "thisMonth":
-                        feedbacks = feedbacks.Where(f => f.CreatedDate.Month == today.Month && f.CreatedDate.Year == today.Year);
-                        break;
-                    case "thisYear":
-                        feedbacks = feedbacks.Where(f => f.CreatedDate.Year == today.Year);
-                        break;
-                }
-            }
+            // Category filter dropdown
+            var categories = _context.Feedbacks
+                .Select(f => f.Category)
+                .Distinct()
+                .ToList();
+            ViewBag.CategoryOptions = new SelectList(categories, category);
 
-            // Pass categories to view
-            ViewBag.Categories = Enum.GetNames(typeof(ContactCategory)).ToList();
-            ViewBag.SelectedCategory = category ?? "";
-            ViewBag.SelectedDateFilter = dateFilter ?? "";
-
-            var list = await feedbacks.OrderByDescending(f => f.CreatedDate).ToListAsync();
-            return View(list);
+            return View(feedbacks.ToList());
         }
     }
+
 }

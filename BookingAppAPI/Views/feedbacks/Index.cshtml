@@ -5,9 +5,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.ActiveTabName = "Feedback";
 
-    var selectedCategory = ViewBag.SelectedCategory as string ?? "";
-    var categories = ViewBag.Categories as List<string> ?? new List<string>();
-    var selectedDateFilter = ViewBag.SelectedDateFilter as string ?? "";
+    var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
 }
 
 <div class="content px-1">
@@ -19,22 +17,21 @@
                 <!-- Date Filter -->
                 <div class="col-auto">
                     <label for="dateFilter" class="form-label text-white mb-0">Filter</label>
-                    <select name="dateFilter" id="dateFilter" class="form-select form-select-sm" asp-items="@(new SelectList(new Dictionary<string, string>
-                        {
-                            {"", "All"}, {"today", "Today"}, {"thisWeek", "This Week"}, {"thisMonth", "This Month"}, {"thisYear", "This Year"}
-                        }, "Key", "Value", selectedDateFilter))">
+                    <select name="dateFilter" id="dateFilter" class="form-select form-select-sm"
+                            asp-items="ViewBag.DateFilterOptions">
+                        <option value="">All</option>
                     </select>
                 </div>
 
                 <!-- Category Filter -->
                 <div class="col-auto">
                     <label for="categoryFilter" class="form-label text-white mb-0">Category</label>
-                    <select name="category" id="categoryFilter" class="form-select form-select-sm" asp-items="@(new SelectList(categories, selectedCategory))">
+                    <select name="category" id="categoryFilter" class="form-select form-select-sm"
+                            asp-items="ViewBag.CategoryOptions">
                         <option value="">-- All Categories --</option>
                     </select>
                 </div>
 
-           
                 <div class="col-auto">
                     <button type="submit" class="btn btn-light btn-sm mt-3">
                         <i class="bi bi-filter me-1"></i> Apply
@@ -60,13 +57,17 @@
                         int index = 1;
                         foreach (var f in Model)
                         {
+                            var uaeDate = TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone);
                             <tr>
                                 <td class="text-center">@index</td>
                                 <td>@f.Name</td>
                                 <td>@f.Email</td>
                                 <td>@f.Category</td>
                                 <td>@f.Message</td>
-                                <td>@f.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td data-order="@uaeDate.ToString("yyyyMMddHHmmss")">
+                                    @uaeDate.ToString("dd MMM yyyy, HH:mm")
+                                </td>
+
                             </tr>
                             index++;
                         }
@@ -88,15 +89,15 @@
             var table = $('#tblFeedback').DataTable({
                 "pageLength": 10,
                 "ordering": true,
+                "order": [[5, "desc"]],
+                "columnDefs": [
+                    { "type": "num", "targets": 5 }
+                ],
                 "language": { "search": "🔍 Search feedbacks:" }
             });
 
             $('#categoryFilter').on('change', function () {
                 table.column(3).search(this.value).draw();
-            });
-
-            $('#searchBox').on('keyup', function () {
-                table.search(this.value).draw();
             });
         });
     </script>
