@@ -34,38 +34,33 @@
             width: var(--sidebar-width);
             background-color: var(--sidebar-bg);
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
             padding: 20px;
             z-index: 1000;
             transition: transform 0.3s ease-in-out;
         }
 
-            .sidebar.hide
-            {
+            .sidebar.hide {
                 transform: translateX(-100%);
             }
 
         .sidebar-header {
             display: flex;
             align-items: center;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
         }
 
         .sidebar-title {
-            font-weight: 600;
-            color: #333;
-            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2b7af0;
+            font-size: 1.2rem;
         }
 
-        .sidebar-subtitle {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .sidebar-menu .nav-link
-        {
-            color: #888;
+        .sidebar-menu .nav-link {
+            color: #555;
             padding: 12px 15px;
             border-radius: 6px;
             font-weight: 500;
@@ -76,32 +71,44 @@
 
             .sidebar-menu .nav-link:hover,
             .sidebar-menu .nav-link.active {
-                background-color: var(--primary-color);
+                background: linear-gradient(45deg, var(--primary-color), #0056b3);
                 color: #fff;
+                box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
             }
 
             .sidebar-menu .nav-link i {
                 margin-right: 10px;
+                font-size: 1.1rem;
             }
 
         .sidebar-footer {
             margin-top: auto;
-            padding-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
         }
 
-        .btn-pro {
-            background-color: var(--primary-color);
+        .btn-logout {
+            background: linear-gradient(45deg, #ff4b5c, #c92a38);
             color: #fff;
-            padding: 10px 15px;
+            padding: 12px 15px;
             border-radius: 8px;
             font-weight: 600;
             width: 100%;
             border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
         }
+
+            .btn-logout:hover {
+                background: linear-gradient(45deg, #c92a38, #a31928);
+                transform: translateY(-2px);
+            }
 
         #page-content-wrapper {
             margin-left: var(--sidebar-width);
-            padding: 100px 20px 20px 20px;
+            padding: 90px 20px 20px 20px;
             transition: margin-left 0.3s ease-in-out;
         }
 
@@ -123,49 +130,27 @@
             object-fit: cover;
         }
 
-        .search-container {
-            position: relative;
-            width: 300px;
-        }
-
-        .search-input {
-            border-radius: 50px;
-            background-color: var(--bg-light);
-            border: 1px solid var(--border-color);
-            padding-left: 40px;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #aaa;
-        }
-
         /* Responsive */
         @@media (max-width: 991.98px) {
-            .sidebar
-        {
-            transform: translateX(-100%);
-            position: fixed;
-            z-index: 1050;
-        }
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 1050;
+            }
 
-        .sidebar.show {
-            transform: translateX(0);
-        }
+                .sidebar.show {
+                    transform: translateX(0);
+                }
 
-        #page-content-wrapper {
-            margin-left: 0;
-            padding-top: 90px;
-        }
+            #page-content-wrapper {
+                margin-left: 0;
+                padding-top: 90px;
+            }
 
-        .navbar {
-            left: 0;
-            width: 100%;
-        }
-
+            .navbar {
+                left: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -173,57 +158,45 @@
 <body>
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="https://i.pravatar.cc/50?img=1" class="rounded-circle me-2" alt="User" />
             <div>
-                <div class="sidebar-title">Admin</div>
-                <div class="sidebar-subtitle">Administrator</div>
+                <div class="sidebar-title">Rashid Bahattab</div>
+                <div class="sidebar-subtitle">Admin Panel</div>
             </div>
         </div>
+
         @{
             var activeTabName = ViewBag.ActiveTabName as string ?? "";
         }
+
         <div class="sidebar-menu flex-grow-1">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a href="/Admin/UserProfile" class="nav-link @(activeTabName == "UserProfile" ? "active" : "")">
-                        <i class="fas fa-user"></i> User Profile
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a href="/Service/Index" class="nav-link @(activeTabName == "Services" ? "active" : "")">
-                        <i class="fas fa-cogs"></i>All Services
+                        <i class="fas fa-cogs"></i> All Services
                     </a>
                 </li>
-            
-
                 <li class="nav-item">
                     <a href="/Bookings/Index" class="nav-link @(activeTabName == "Booking" ? "active" : "")">
-                        <i class="fas fa-envelope"></i>All Booking 
+                        <i class="fas fa-calendar-check"></i> All Bookings
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a href="/Bookings/Payment" class="nav-link @(activeTabName == "Payment" ? "active" : "")">
-                        <i class="fas fa-envelope"></i>All Payments 
-                        </a>
-                </li>
-
-
-                <li class="nav-item">
-                    <a href="/Feedbacks/Index" class="nav-link @(activeTabName == "Feedback" ? "active" : "")">
-                        <i class="fas fa-cogs"></i>All Feedback
+                        <i class="fas fa-credit-card"></i> All Payments
                     </a>
                 </li>
-
-             
-
-
+                <li class="nav-item">
+                    <a href="/Feedbacks/Index" class="nav-link @(activeTabName == "Feedback" ? "active" : "")">
+                        <i class="fas fa-comments"></i> All Feedback
+                    </a>
+                </li>
             </ul>
         </div>
 
+        <!-- Logout always at bottom -->
         <div class="sidebar-footer">
-            <a href="#" class="btn btn-pro">
-                <i class="fas fa-cloud-download-alt me-2"></i> Upgrade
+            <a href="/Account/Logout" class="btn btn-logout">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
             </a>
         </div>
     </div>
@@ -235,13 +208,7 @@
                     <i class="fa fa-bars"></i>
                 </button>
 
-                <div class="search-container d-none d-md-flex ms-3">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="form-control search-input" placeholder="Search..." />
-                </div>
-
                 <div class="d-flex align-items-center ms-auto">
-                    <a class="nav-link px-3" href="#"><i class="fas fa-envelope-open-text"></i></a>
                     <a class="nav-link px-3" href="#"><i class="fas fa-bell"></i></a>
                     <div class="dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
@@ -252,7 +219,7 @@
                             <li><a class="dropdown-item" href="#">Profile</a></li>
                             <li><a class="dropdown-item" href="#">Settings</a></li>
                             <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="#">Logout</a></li>
+                            <li><a class="dropdown-item text-danger" href="/Account/Logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>
                     </div>
                 </div>
