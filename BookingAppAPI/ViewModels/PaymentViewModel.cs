@@ -17,9 +17,11 @@
 
             // Booking info
             public string? ServiceName { get; set; }
-
-            // User info
-            public int? UserId { get; set; }
+        public string? Title { get; set; }
+        public DateTime? AppointmentDate { get; set; }
+        public string? AppointmentTime { get; set; }
+        // User info
+        public int? UserId { get; set; }
             public int? UserUniqueId { get; set; }
             public string FullName { get; set; } = string.Empty;
             public string? UserPhoneNumber { get; set; }

@@ -66,8 +66,10 @@
                 </thead>
                 <tbody>
                     @{
+                        // Sort alphabetically by CustomerName
+                        var sortedPayments = Model.OrderBy(p => p.CustomerName).ToList();
                         int index = 1;
-                        foreach (var p in Model)
+                        foreach (var p in sortedPayments)
                         {
                             var uaeTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(p.CreatedAt, uaeTimeZone.Id);
                             <tr>
@@ -123,9 +125,22 @@
             var table = $('#tblPayments').DataTable({
                 "pageLength": 10,
                 "ordering": true,
-                "order": [[5, "desc"]], // Sort by Payment Date (UAE)
-                "language": { "search": "🔍 Search payments:" }
+                "order": [[1, "asc"]], // Sort alphabetically by Customer Name
+                "language": { "search": "🔍 Search payments:" },
+                "columnDefs": [
+                    {
+                        "targets": 0, // Sr.No column
+                        "orderable": false
+                    }
+                ]
             });
+
+            // Renumber Sr.No after search, sort, or pagination
+            table.on('order.dt search.dt', function () {
+                table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                    cell.innerHTML = i + 1;
+                });
+            }).draw();
 
             $('.view-details').click(function () {
                 var payment = $(this).data('payment');
@@ -136,21 +151,19 @@
                 var uaeTime = new Date(createdAt.getTime() + (uaeOffset - createdAt.getTimezoneOffset()) * 60000);
 
                 var html = `
-                    <h5>Payment Info</h5>
+                    <h5>Booking & Payment Details</h5>
                     <table class="table table-bordered">
-                    
-                        <tr><th>Customer Name</th><td>${payment.CustomerName}</td></tr>
+                        <tr><th>Booking ID</th><td>${payment.BookingId}</td></tr>
+                        <tr><th>Name</th><td>${payment.CustomerName}</td></tr>
+                        <tr><th>Mobile</th><td>${payment.PhoneNumber}</td></tr>
                         <tr><th>Email</th><td>${payment.Email ?? ''}</td></tr>
-                           <tr><th>Gender</th><td>${payment.Gender ?? ''}</td></tr>
-                        <tr><th>Phone</th><td>${payment.PhoneNumber ?? ''}</td></tr>
-                        <tr><th>Amount</th><td>${payment.Amount} ${payment.Currency}</td></tr>
-                        <tr><th>Payment Date</th><td>${uaeTime.toLocaleString('en-GB', { hour12: true })}</td></tr>
-                        <tr><th>Service</th><td>${payment.ServiceName}</td></tr>
-                    
-                       <tr><th>Description</th><td>${payment.Description}</td></tr>
-                     
-                        <tr><th>Address</th><td>${payment.Address ?? ''}</td></tr>
-                       
+                        <tr><th>Service Name</th><td>${payment.ServiceName}</td></tr>
+                        <tr><th>Amount Paid</th><td>${payment.Amount} ${payment.Currency}</td></tr>
+                        <tr><th>Appointment Date</th><td>${payment.AppointmentDate ?? ''}</td></tr>
+                        <tr><th>Appointment Time</th><td>${payment.AppointmentTime ?? ''}</td></tr>
+                        <tr><th>Title</th><td>${payment.Title ?? ''}</td></tr>
+                        <tr><th>Description</th><td>${payment.Description ?? ''}</td></tr>
+                        <tr><th>Booking Created Date & Time</th><td>${uaeTime.toLocaleString('en-GB', { hour12: true })}</td></tr>
                     </table>
                 `;
 
