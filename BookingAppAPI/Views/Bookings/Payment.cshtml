@@ -56,7 +56,7 @@
                     <tr>
                         <th>Sr.No</th>
                         <th>Customer</th>
-                        <th>Email</th>
+                     
                         <th>Phone</th>
                         <th>Amount (AED)</th>
                         <th>Payment Date</th>
@@ -66,7 +66,6 @@
                 </thead>
                 <tbody>
                     @{
-                        // Sort alphabetically by Customer Name
                         var sortedPayments = Model.OrderBy(p => p.CustomerName).ToList();
                         int index = 1;
 
@@ -75,22 +74,26 @@
                             var uaeTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(p.CreatedAt, uaeTimeZone.Id);
                             <tr>
                                 <td class="text-center">@index</td>
-                                <td>@p.CustomerName</td>
-                                <td>@p.Email</td>
-                                <td>@p.PhoneNumber</td>
+                                <td>@(string.IsNullOrWhiteSpace(p.CustomerName) ? "No Name" : p.CustomerName)</td>
+                          
+                                <td>@(string.IsNullOrWhiteSpace(p.UserPhoneNumber) ? "No Phone" : p.UserPhoneNumber)</td>
                                 <td>@p.Amount @p.Currency</td>
                                 <td data-order="@uaeTime.ToString("yyyyMMddHHmmss")">
                                     @uaeTime.ToString("dd MMM yyyy, HH:mm")
                                 </td>
-                                <td>@p.ServiceName</td>
+                                <td>@(string.IsNullOrWhiteSpace(p.ServiceName) ? "No Service" : p.ServiceName)</td>
                                 <td class="text-center">
-                                    <a asp-action="PaymentDetail" asp-route-id="@p.Id" class="text-primary me-2" title="View"><i class="fa fa-eye"></i></a>
+                                    <a asp-action="PaymentDetail" asp-route-id="@p.Id" class="text-primary me-2" title="View">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
                                 </td>
                             </tr>
                             index++;
                         }
                     }
                 </tbody>
+
+               
             </table>
         </div>
     </div>

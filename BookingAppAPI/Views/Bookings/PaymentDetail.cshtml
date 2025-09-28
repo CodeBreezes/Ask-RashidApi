@@ -9,32 +9,30 @@
 <div class="container mt-4">
     <!-- Payment Info Card -->
     <div class="card shadow-sm rounded">
-        <!-- Payment Info Header -->
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Payment Info</h4>
         </div>
         <div class="card-body">
-            <!-- Payment Info Section -->
             <div class="row g-4 mb-4">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Booking ID</label>
-                    <div>@Model.BookingId</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.BookingId) ? "No Booking" : Model.BookingId)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Customer Name</label>
-                    <div>@Model.CustomerName</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.CustomerName) ? "No Name" : Model.CustomerName)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Mobile</label>
-                    <div>@Model.PhoneNumber</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "No Phone" : Model.PhoneNumber)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Email</label>
-                    <div>@Model.Email</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Email) ? "No Email" : Model.Email)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Service Name</label>
-                    <div>@Model.ServiceName</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.ServiceName) ? "No Service" : Model.ServiceName)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Amount Paid</label>
@@ -42,68 +40,61 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Appointment Date</label>
-                    <div>@Model.AppointmentDate?.ToString("dd MMM yyyy")</div>
+                    <div>@(Model.AppointmentDate.HasValue ? Model.AppointmentDate.Value.ToString("dd MMM yyyy") : "No Date")</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Appointment Time</label>
-                    <div>@Model.AppointmentTime</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.AppointmentTime) ? "No Time" : Model.AppointmentTime)</div>
                 </div>
-               
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Description</label>
-                    <div>@Model.Description</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Booking Created Date & Time</label>
-                    <div class="text-info fw-bold">@Model.CreatedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Description) ? "No Description" : Model.Description)</div>
                 </div>
             </div>
 
-            <!-- User Info Nested Card -->
+            <!-- User Info Card -->
             <div class="card border-secondary shadow-sm mt-3">
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">User Info</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3 align-items-center">
-                        <div class="col-md-2 text-center">
+                        <div class="col-md-2 text-center mb-3">
                             <img src="@Url.Content("~/wwwroot/UserProfiles/" + Model.UserUniqueId + "/" + (string.IsNullOrEmpty(Model.ProfileImageUrl) ? "default.jpg" : Model.ProfileImageUrl))"
                                  onerror="this.onerror=null;this.src='@Url.Content("~/UserProfiles/default.jpg")';"
-                                 class="img-fluid rounded-circle shadow-sm mb-3"
-                                 style="width:120px;" />
+                                 class="img-fluid rounded-circle shadow-sm" style="width:120px;" />
                         </div>
                         <div class="col-md-10">
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Full Name</label>
-                                    <div>@Model.FullName</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Gender</label>
-                                    <div>@Model.Gender</div>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.FullName) ? "No Name" : Model.FullName)</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Email</label>
-                                    <div>@Model.UserEmail</div>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.UserEmail) ? "No Email" : Model.UserEmail)</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Phone</label>
-                                    <div>@Model.UserPhoneNumber</div>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.UserPhoneNumber) ? "No Phone" : Model.UserPhoneNumber)</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Address</label>
-                                    <div>@Model.Address</div>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.Address) ? "No Address" : Model.Address)</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Date of Birth</label>
-                                    <div>@Model.DateOfBirth?.ToString("dd MMM yyyy")</div>
+                                    <div>@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "No DOB")</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Gender</label>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.Gender) ? "No Gender" : Model.Gender)</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div> <!-- End User Info Card Body -->
             </div> <!-- End User Info Card -->
-
         </div> <!-- End Payment Card Body -->
     </div> <!-- End Payment Card -->
 

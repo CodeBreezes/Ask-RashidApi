@@ -8,6 +8,7 @@ using Stripe;
 using BookingAppAPI.ViewModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Http.HttpResults;
+using BookingAppAPI.DB.Models;
 
 namespace BookingAppApi.Controllers
 {
@@ -171,102 +172,75 @@ namespace BookingAppApi.Controllers
         // INDEX: Basic Payments
         // ===============================
 
-        // ===============================
-        public async Task<IActionResult> Payment(string searchString, string filter)
+
+        public IActionResult Payment(string? searchString, string? filter)
         {
-            ViewBag.Filter = filter ?? "";
-            ViewData["CurrentFilter"] = searchString ?? "";
+            var paymentsQuery = from p in _context.Payments
+                                join u in _context.AppUsers on p.userId equals u.UniqueId into userGroup
+                                from u in userGroup.DefaultIfEmpty()
+                                join s in _context.Services on p.ServiceId equals s.UniqueId into serviceGroup
+                                from s in serviceGroup.DefaultIfEmpty()
+                                select new PaymentViewModel
+                                {
+                                    Id = p.Id,
+                                    StripePaymentIntentId = string.IsNullOrWhiteSpace(p.StripePaymentIntentId) ? "No Stripe ID" : p.StripePaymentIntentId,
+                                    CustomerName = u != null && !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(p.CustomerName) ? p.CustomerName : "No Name"),
+                                    FullName = u != null && !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(p.CustomerName) ? p.CustomerName : "No Name"),
+                                    UserId = p.userId,
+                                    UserUniqueId = u.UniqueId ,
+                                    Email = string.IsNullOrWhiteSpace(u.Email) ? "No Record" : u.Email,
+                                    UserPhoneNumber = string.IsNullOrWhiteSpace(u.PhoneNumber) ? "No Phone" : u.PhoneNumber,
+                                    ServiceId = p.ServiceId,
+                                    ServiceName = s != null && !string.IsNullOrWhiteSpace(s.Name) ? s.Name : "No Service",
+                                    AppointmentDate = p.CreatedAt,
+                                    AppointmentTime = p.CreatedAt.ToString("hh:mm tt"),
+                                    Amount = p.Amount,
+                                    Currency = string.IsNullOrWhiteSpace(p.Currency) ? "AED" : p.Currency,
+                                    Description = string.IsNullOrWhiteSpace(p.Description) ? "No Description" : p.Description,
+                                    CreatedAt = p.CreatedAt,
+                                    BookingId = string.IsNullOrWhiteSpace(p.BookingId) ? "No Booking" : p.BookingId
+                                };
 
-            var payments = await _context.Payments.ToListAsync();
-            var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
-
-            var paymentVMs = payments.Select(p =>
-            {
-                var service = p.ServiceId.HasValue ? _context.Services.FirstOrDefault(s => s.UniqueId == p.ServiceId.Value) : null;
-                var user = p.userId.HasValue ? _context.AppUsers.FirstOrDefault(u => u.UniqueId == p.userId.Value) : null;
-
-                return new PaymentViewModel
-                {
-                    Id = p.Id,
-                    CustomerName = p.CustomerName,
-                    Email = p.Email,
-                    PhoneNumber = p.PhoneNumber,
-                    Amount = p.Amount,
-                    Currency = "AED",
-                    Description = p.Description,
-                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(p.CreatedAt, uaeTimeZone),
-                    BookingId = p.BookingId,
-                    ServiceId = p.ServiceId,
-                    ServiceName = service?.Name ?? "Removed",
-                    UserId = p.userId,
-                    UserUniqueId = user?.UniqueId ?? 0,
-                    FullName = user?.FullName ?? "",
-                    UserPhoneNumber = user?.PhoneNumber,
-                    UserEmail = user?.Email,
-                    DateOfBirth = user?.DateOfBirth,
-                    Gender = user.Gender,
-                    ProfileImageUrl = user?.ProfileImageUrl,
-                    Address = user?.Address,
-                    AppointmentDate = p.CreatedAt,
-                    Title = service?.Name ?? "Removed",
-                    AppointmentTime = p.CreatedAt.ToString("hh:mm tt")
-
-
-                };
-            }).AsQueryable();
-
-            // Search
+            // Optional search filter
             if (!string.IsNullOrEmpty(searchString))
             {
-                paymentVMs = paymentVMs.Where(p =>
-                    p.CustomerName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-                    (p.Email != null && p.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.PhoneNumber != null && p.PhoneNumber.Contains(searchString)) ||
-                    (p.BookingId != null && p.BookingId.Contains(searchString)) ||
-                    p.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                paymentsQuery = paymentsQuery.Where(p =>
+                    (p.FullName != null && p.FullName.Contains(searchString)) ||
+                    (p.ServiceName != null && p.ServiceName.Contains(searchString)) ||
+                    (p.BookingId != null && p.BookingId.Contains(searchString))
                 );
             }
 
-            // Filter
+            // Optional date filter
             if (!string.IsNullOrEmpty(filter))
             {
-                var now = DateTime.UtcNow.AddHours(4);
-                switch (filter)
+                var now = DateTime.UtcNow;
+                paymentsQuery = filter switch
                 {
-                    case "today":
-                        paymentVMs = paymentVMs.Where(p => p.CreatedAt.Date == now.Date);
-                        break;
-                    case "thisWeek":
-                        int diff = (int)now.DayOfWeek;
-                        var weekStart = now.AddDays(-diff);
-                        var weekEnd = weekStart.AddDays(7).AddSeconds(-1);
-                        paymentVMs = paymentVMs.Where(p => p.CreatedAt >= weekStart && p.CreatedAt <= weekEnd);
-                        break;
-                    case "thisMonth":
-                        paymentVMs = paymentVMs.Where(p => p.CreatedAt.Month == now.Month && p.CreatedAt.Year == now.Year);
-                        break;
-                    case "thisYear":
-                        paymentVMs = paymentVMs.Where(p => p.CreatedAt.Year == now.Year);
-                        break;
-                }
+                    "today" => paymentsQuery.Where(p => p.CreatedAt.Date == now.Date),
+                    "thisWeek" => paymentsQuery.Where(p => (now - p.CreatedAt).TotalDays <= 7),
+                    "thisMonth" => paymentsQuery.Where(p => p.CreatedAt.Month == now.Month && p.CreatedAt.Year == now.Year),
+                    "thisYear" => paymentsQuery.Where(p => p.CreatedAt.Year == now.Year),
+                    _ => paymentsQuery
+                };
             }
 
-            // ✅ Alphabetical sort
-            paymentVMs = paymentVMs.OrderBy(p => p.CustomerName);
-
-            return View(paymentVMs.ToList());
+            var payments = paymentsQuery.ToList();
+            return View(payments);
         }
+
 
 
         // ===============================
         // DETAILS: Full Payment Info
         // ===============================
-        public async Task<IActionResult> PaymentDetail(int id)
+      
+            // Map to ViewModel safely
+         public async Task<IActionResult> PaymentDetail(int id)
         {
             // Fetch payment
-            var payment = await _context.Payments
-                .FirstOrDefaultAsync(p => p.Id == id);
-            if (payment == null) return NotFound();
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == id);
+            if (payment == null) return NotFound("No payment record found.");
 
             // Fetch related service
             var service = payment.ServiceId.HasValue
@@ -278,43 +252,38 @@ namespace BookingAppApi.Controllers
                 ? await _context.AppUsers.FirstOrDefaultAsync(u => u.UniqueId == payment.userId.Value)
                 : null;
 
-            // Convert CreatedAt to UAE time
             var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
 
-            // Map to ViewModel
+            // Map to ViewModel safely
             var paymentVM = new PaymentViewModel
             {
                 Id = payment.Id,
-                CustomerName = payment.CustomerName,
-                Email = payment.Email,
-                PhoneNumber = payment.PhoneNumber,
+                CustomerName = string.IsNullOrWhiteSpace(user?.FullName) ? (string.IsNullOrWhiteSpace(payment.CustomerName) ? "No Name" : payment.CustomerName) : user.FullName,
+                Email = string.IsNullOrWhiteSpace(payment.Email) ? "No Email" : payment.Email,
+                PhoneNumber = string.IsNullOrWhiteSpace(user?.PhoneNumber) ? "No Phone" : user.PhoneNumber,
                 Amount = payment.Amount,
-                Currency = "AED",
-                Description = payment.Description,
+                Currency = string.IsNullOrWhiteSpace(payment.Currency) ? "AED" : payment.Currency,
+                Description = string.IsNullOrWhiteSpace(payment.Description) ? "No Description" : payment.Description,
                 CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(payment.CreatedAt, uaeTimeZone),
-                BookingId = payment.BookingId,
+                BookingId = string.IsNullOrWhiteSpace(payment.BookingId) ? "No Booking" : payment.BookingId,
                 ServiceId = payment.ServiceId,
-                ServiceName = service?.Name ?? "Removed",
-
-                // If you have Appointment info stored separately, map it here
+                ServiceName = string.IsNullOrWhiteSpace(service?.Name) ? "No Service" : service.Name,
                 AppointmentDate = payment.CreatedAt,
-
                 AppointmentTime = payment.CreatedAt.ToString("hh:mm tt"),
-
-                // User info
                 UserId = payment.userId,
                 UserUniqueId = user?.UniqueId ?? 0,
-                FullName = user?.FullName ?? "",
-                UserPhoneNumber = user?.PhoneNumber,
-                UserEmail = payment?.Email,
+                FullName = string.IsNullOrWhiteSpace(user?.FullName) ? "No Name" : user.FullName,
+                UserPhoneNumber = string.IsNullOrWhiteSpace(user?.PhoneNumber) ? "No Phone" : user.PhoneNumber,
+                UserEmail = string.IsNullOrWhiteSpace(user?.Email) ? "No Email" : user.Email,
                 DateOfBirth = user?.DateOfBirth,
-                Gender = user.Gender,
-                ProfileImageUrl = user?.ProfileImageUrl,
-                Address = user.Address
+                Gender = string.IsNullOrWhiteSpace(user?.Gender) ? "No Gender" : user.Gender,
+                ProfileImageUrl = string.IsNullOrWhiteSpace(user?.ProfileImageUrl) ? "/images/default-profile.png" : user.ProfileImageUrl,
+                Address = string.IsNullOrWhiteSpace(user?.Address) ? "No Address" : user.Address
             };
 
             return View(paymentVM);
         }
+
 
     }
 
