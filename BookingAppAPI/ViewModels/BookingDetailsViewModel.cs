@@ -11,9 +11,10 @@
             public DateTime? EndedDate { get; set; }
             public string? Topic { get; set; }
             public string? Notes { get; set; }
+        public string? Description { get; set; }
 
-            // User info (all fields)
-            public int UserUniqueId { get; set; }
+        // User info (all fields)
+        public int UserUniqueId { get; set; }
             
             public string FullName { get; set; } = string.Empty;
             public string? PhoneNumber { get; set; }

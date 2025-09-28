@@ -25,12 +25,12 @@
 
                     @{
                         var options = new Dictionary<string, string>
-                    {
-                    { "today", "Today" },
-                    { "thisWeek", "This Week" },
-                    { "thisMonth", "This Month" },
-                    { "thisYear", "This Year" }
-                    };
+                        {
+                            { "today", "Today" },
+                            { "thisWeek", "This Week" },
+                            { "thisMonth", "This Month" },
+                            { "thisYear", "This Year" }
+                        };
                     }
 
                     @foreach (var opt in options)
@@ -66,9 +66,10 @@
                 </thead>
                 <tbody>
                     @{
-                        // Sort alphabetically by CustomerName
+                        // Sort alphabetically by Customer Name
                         var sortedPayments = Model.OrderBy(p => p.CustomerName).ToList();
                         int index = 1;
+
                         foreach (var p in sortedPayments)
                         {
                             var uaeTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(p.CreatedAt, uaeTimeZone.Id);
@@ -83,10 +84,7 @@
                                 </td>
                                 <td>@p.ServiceName</td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-primary view-details"
-                                            data-payment='@Newtonsoft.Json.JsonConvert.SerializeObject(p)'>
-                                        View
-                                    </button>
+                                    <a asp-action="PaymentDetail" asp-route-id="@p.Id" class="text-primary me-2" title="View"><i class="fa fa-eye"></i></a>
                                 </td>
                             </tr>
                             index++;
@@ -94,21 +92,6 @@
                     }
                 </tbody>
             </table>
-        </div>
-    </div>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Payment Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="modalContent"></div>
-            </div>
         </div>
     </div>
 </div>
@@ -128,10 +111,7 @@
                 "order": [[1, "asc"]], // Sort alphabetically by Customer Name
                 "language": { "search": "🔍 Search payments:" },
                 "columnDefs": [
-                    {
-                        "targets": 0, // Sr.No column
-                        "orderable": false
-                    }
+                    { "targets": 0, "orderable": false } // Sr.No column not sortable
                 ]
             });
 
@@ -141,36 +121,6 @@
                     cell.innerHTML = i + 1;
                 });
             }).draw();
-
-            $('.view-details').click(function () {
-                var payment = $(this).data('payment');
-
-                // Client-side UAE time
-                var createdAt = new Date(payment.CreatedAt);
-                var uaeOffset = 4 * 60; // GMT+4
-                var uaeTime = new Date(createdAt.getTime() + (uaeOffset - createdAt.getTimezoneOffset()) * 60000);
-
-                var html = `
-                    <h5>Booking & Payment Details</h5>
-                    <table class="table table-bordered">
-                        <tr><th>Booking ID</th><td>${payment.BookingId}</td></tr>
-                        <tr><th>Name</th><td>${payment.CustomerName}</td></tr>
-                        <tr><th>Mobile</th><td>${payment.PhoneNumber}</td></tr>
-                        <tr><th>Email</th><td>${payment.Email ?? ''}</td></tr>
-                        <tr><th>Service Name</th><td>${payment.ServiceName}</td></tr>
-                        <tr><th>Amount Paid</th><td>${payment.Amount} ${payment.Currency}</td></tr>
-                        <tr><th>Appointment Date</th><td>${payment.AppointmentDate ?? ''}</td></tr>
-                        <tr><th>Appointment Time</th><td>${payment.AppointmentTime ?? ''}</td></tr>
-                        <tr><th>Title</th><td>${payment.Title ?? ''}</td></tr>
-                        <tr><th>Description</th><td>${payment.Description ?? ''}</td></tr>
-                        <tr><th>Booking Created Date & Time</th><td>${uaeTime.toLocaleString('en-GB', { hour12: true })}</td></tr>
-                    </table>
-                `;
-
-                $('#modalContent').html(html);
-                var modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-                modal.show();
-            });
         });
     </script>
 }

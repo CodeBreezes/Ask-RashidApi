@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Stripe;
 using BookingAppAPI.ViewModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace BookingAppApi.Controllers
 {
@@ -26,34 +27,39 @@ namespace BookingAppApi.Controllers
         }
 
         // GET: Bookings
-        public async Task<IActionResult> Index(string filter, int? serviceId)
+        public async Task<IActionResult> Index(int? userId, string? filter, int? serviceId)
         {
-            var bookingsQuery = _context.Booking
-                .Include(b => b.Service)
-
-                .AsQueryable();
-
             var today = DateOnly.FromDateTime(DateTime.Today);
 
+            // Base query
+            var bookingsQuery = _context.Booking.AsQueryable();
+
+            // ✅ UserId filter lagao
+            if (userId.HasValue)
+            {
+                bookingsQuery = bookingsQuery.Where(b => b.UserId == userId.Value);
+            }
+
+            // ✅ Filter apply karo
             if (!string.IsNullOrEmpty(filter))
             {
-                switch (filter)
+                switch (filter.ToLower())
                 {
                     case "today":
                         bookingsQuery = bookingsQuery.Where(b => b.StartedDate == today);
                         break;
 
-                    case "thisWeek":
+                    case "thisweek":
                         var startOfWeek = today.AddDays(-(int)DateTime.Today.DayOfWeek);
                         var endOfWeek = startOfWeek.AddDays(6);
                         bookingsQuery = bookingsQuery.Where(b => b.StartedDate >= startOfWeek && b.StartedDate <= endOfWeek);
                         break;
 
-                    case "thisMonth":
+                    case "thismonth":
                         bookingsQuery = bookingsQuery.Where(b => b.StartedDate.Month == today.Month && b.StartedDate.Year == today.Year);
                         break;
 
-                    case "thisYear":
+                    case "thisyear":
                         bookingsQuery = bookingsQuery.Where(b => b.StartedDate.Year == today.Year);
                         break;
                 }
@@ -64,17 +70,46 @@ namespace BookingAppApi.Controllers
                 bookingsQuery = bookingsQuery.Where(b => b.ServiceId == serviceId.Value);
             }
 
-            // ✅ ensure proper ordering by date + time
-            bookingsQuery = bookingsQuery
-                .OrderByDescending(b => b.StartedDate)
-                .ThenByDescending(b => b.StartedTime);
+            // ✅ Map to ViewModel (LINQ Projection)
+            var bookings = await (
+                from b in bookingsQuery
+                join u in _context.AppUsers on b.UserId equals u.UniqueId
+                join s in _context.Services on b.ServiceId equals s.UniqueId
+                orderby b.StartedDate descending, b.StartedTime descending
+                select new BookingAppAPI.ViewModels.BookingDetailsViewModel
+                {
+                    // Booking info
+                    UniqueId = b.UniqueId,
+                    ServiceName = s.Name,
+                    StartedDate = b.StartedDate,
+                    StartedTime = b.StartedTime,
+                    EndedDate = b.EndedDate,
+                    Topic = b.Topic,
+                    Notes = b.Notes,
 
+                    // User info
+                    UserUniqueId = u.UniqueId,
+                    FullName = u.FullName,
+                    PhoneNumber = u.PhoneNumber,
+                    Email = u.Email,
+                    DateOfBirth = u.DateOfBirth,
+                    Gender = u.Gender,
+                    ProfileImageUrl = u.ProfileImageUrl,
+                    Address = u.Address
+                }
+            ).ToListAsync();
+
+            // ✅ ViewBags for filters & dropdown
+            ViewBag.UserId = userId;
             ViewBag.Filter = filter;
             ViewBag.ServiceId = serviceId;
             ViewBag.Services = await _context.Services.ToListAsync();
 
-            return View(await bookingsQuery.ToListAsync());
+            // ✅ IMPORTANT: ab sirf ViewModel bhejna hai
+            return View(bookings);
         }
+
+
 
         public async Task<IActionResult> Details(int id)
         {
@@ -102,6 +137,7 @@ namespace BookingAppApi.Controllers
                 EndedDate = booking.EndedDate,
                 Topic = booking.Topic,
                 Notes = booking.Notes,
+
 
                 // User info
                 UserUniqueId = user.UniqueId,
@@ -168,7 +204,7 @@ namespace BookingAppApi.Controllers
                     UserPhoneNumber = user?.PhoneNumber,
                     UserEmail = user?.Email,
                     DateOfBirth = user?.DateOfBirth,
-                    Gender = user?.Gender,
+                    Gender = user.Gender,
                     ProfileImageUrl = user?.ProfileImageUrl,
                     Address = user?.Address,
                     AppointmentDate = p.CreatedAt,
@@ -225,44 +261,64 @@ namespace BookingAppApi.Controllers
         // ===============================
         // DETAILS: Full Payment Info
         // ===============================
-        public async Task<IActionResult> PaymentDetails(int id)
+        public async Task<IActionResult> PaymentDetail(int id)
+        {
+            // Fetch payment
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.Id == id);
+            if (payment == null) return NotFound();
+
+            // Fetch related service
+            var service = payment.ServiceId.HasValue
+                ? await _context.Services.FirstOrDefaultAsync(s => s.UniqueId == payment.ServiceId.Value)
+                : null;
+
+            // Fetch related user
+            var user = payment.userId.HasValue
+                ? await _context.AppUsers.FirstOrDefaultAsync(u => u.UniqueId == payment.userId.Value)
+                : null;
+
+            // Convert CreatedAt to UAE time
+            var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
+
+            // Map to ViewModel
+            var paymentVM = new PaymentViewModel
             {
-                var payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == id);
-                if (payment == null) return NotFound();
+                Id = payment.Id,
+                CustomerName = payment.CustomerName,
+                Email = payment.Email,
+                PhoneNumber = payment.PhoneNumber,
+                Amount = payment.Amount,
+                Currency = "AED",
+                Description = payment.Description,
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(payment.CreatedAt, uaeTimeZone),
+                BookingId = payment.BookingId,
+                ServiceId = payment.ServiceId,
+                ServiceName = service?.Name ?? "Removed",
 
-                var service = payment.ServiceId.HasValue ? _context.Services.FirstOrDefault(s => s.UniqueId == payment.ServiceId.Value) : null;
-                var user = payment.userId.HasValue ? _context.AppUsers.FirstOrDefault(u => u.UniqueId == payment.userId.Value) : null;
+                // If you have Appointment info stored separately, map it here
+                AppointmentDate = payment.CreatedAt,
 
-                var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time"); // GMT+4
+                AppointmentTime = payment.CreatedAt.ToString("hh:mm tt"),
 
-                var paymentVM = new PaymentViewModel
-                {
-                    Id = payment.Id,
-                    CustomerName = payment.CustomerName,
-                    Email = payment.Email,
-                    PhoneNumber = payment.PhoneNumber,
-                    Amount = payment.Amount,
-                    Currency = "AED",
-                    Description = payment.Description,
-                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(payment.CreatedAt, uaeTimeZone),
-                    BookingId = payment.BookingId,
-                    ServiceId = payment.ServiceId,
-                    ServiceName = service?.Name ?? "Removed",
-                    UserId = payment.userId,
-                    UserUniqueId = user?.UniqueId ?? 0,
-                    FullName = user?.FullName ?? "",
-                    UserPhoneNumber = user?.PhoneNumber,
-                    UserEmail = user?.Email,
-                    DateOfBirth = user?.DateOfBirth,
-                    Gender = user?.Gender,
-                    ProfileImageUrl = user?.ProfileImageUrl,
-                    Address = user?.Address
-                };
+                // User info
+                UserId = payment.userId,
+                UserUniqueId = user?.UniqueId ?? 0,
+                FullName = user?.FullName ?? "",
+                UserPhoneNumber = user?.PhoneNumber,
+                UserEmail = payment?.Email,
+                DateOfBirth = user?.DateOfBirth,
+                Gender = user.Gender,
+                ProfileImageUrl = user?.ProfileImageUrl,
+                Address = user.Address
+            };
 
-                return View(paymentVM);
-            }
+            return View(paymentVM);
         }
+
     }
+
+}
 
 
 
