@@ -3,11 +3,10 @@
 @{
     ViewData["Title"] = "All Bookings";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewBag.ActiveTabName = "Booking";
-    var services = ViewBag.Services as List<BookingAppAPI.DB.Services>;
-    var selectedFilter = ViewBag.Filter as string;
-    var selectedServiceId = ViewBag.ServiceId as int?;
 
+    var services = ViewBag.Services as List<BookingAppAPI.DB.Services> ?? new();
+    var selectedFilter = ViewBag.Filter as string ?? string.Empty;
+    var selectedServiceId = ViewBag.ServiceId as int?;
 }
 
 <div class="content px-1">
@@ -15,14 +14,17 @@
         <div class="card-header bg-primary text-white rounded-top-3 d-flex flex-wrap justify-content-between align-items-center">
             <h4 class="mb-0">All Bookings</h4>
 
-           <form method="get" asp-action="Index" class="row gx-2 gy-1 align-items-end m-0">
-    <!-- Filter dropdown -->
-    <div class="col-auto">
-        <label for="filterOption" class="form-label text-white mb-0">Filter</label>
-                    <select name="filter" id="filterOption" class="form-select form-select-sm"> <option value="">All</option> <option value="today" selected="@(ViewBag.Filter == "today")">Today</option> <option value="thisWeek" selected="@(ViewBag.Filter == "thisWeek")">This Week</option> <option value="thisMonth" selected="@(ViewBag.Filter == "thisMonth")">This Month</option> <option value="thisYear" selected="@(ViewBag.Filter == "thisYear")">This Year</option> </select>
-    </div>
-
-
+            <form method="get" asp-action="Index" class="row gx-2 gy-1 align-items-end m-0">
+                <!-- Filter dropdown -->
+                <div class="col-auto">
+                    <label for="filterOption" class="form-label text-white mb-0">Filter</label>
+                    <select name="filter" id="filterOption" class="form-select form-select-sm">
+                        <option value="today" selected="@(ViewBag.Filter == "today")">Today</option>
+                        <option value="thisWeek" selected="@(ViewBag.Filter == "thisWeek")">This Week</option>
+                        <option value="thisMonth" selected="@(ViewBag.Filter == "thisMonth")">This Month</option>
+                        <option value="thisYear" selected="@(ViewBag.Filter == "thisYear")">This Year</option>
+                    </select>
+                </div>
 
                 <!-- Service dropdown -->
                 <div class="col-auto">
@@ -31,16 +33,14 @@
                         <option value="">-- All Services --</option>
                         @foreach (var service in services)
                         {
-                            <text>
-                                @if (ViewBag.ServiceId != null && ViewBag.ServiceId == service.UniqueId)
-                                {
-                                    <option value="@service.UniqueId" selected>@service.Name</option>
-                                }
-                                else
-                                {
-                                    <option value="@service.UniqueId">@service.Name</option>
-                                }
-                            </text>
+                            @if (ViewBag.ServiceId != null && ViewBag.ServiceId == service.UniqueId)
+                            {
+                                <option value="@service.UniqueId" selected>@service.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@service.UniqueId">@service.Name</option>
+                            }
                         }
                     </select>
                 </div>
@@ -59,28 +59,32 @@
                     <tr>
                         <th>#</th>
                         <th>Customer Name</th>
-                        <th>Service Name</th>
+                        <th>Service</th>
                         <th>Booking Date</th>
                         <th>Topic</th>
+                        <th>Notes</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Any())
+                    @if (Model != null && Model.Any())
                     {
-                        int index = 1;
-                        foreach (var booking in Model.OrderBy(b => b.FullName)) // Alphabetical order
+                        var index = 1;
+                        foreach (var booking in Model)
                         {
                             <tr>
                                 <td class="text-center">@index</td>
                                 <td>@booking.FullName</td>
                                 <td>@booking.ServiceName</td>
-                                <td class="no-break" data-order="@booking.StartedDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd")">
+                                <td data-order="@booking.StartedDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd")">
                                     @booking.StartedDate.ToString("dd MMM yyyy")
                                 </td>
                                 <td>@booking.Topic</td>
+                                <td>@booking.Notes</td>
                                 <td class="text-end">
-                                    <a asp-action="Details" asp-route-id="@booking.UniqueId" class="text-primary me-2" title="View"><i class="fa fa-eye"></i></a>
+                                    <a asp-action="Details" asp-route-id="@booking.UniqueId" class="text-primary me-2" title="View">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
                                     <a asp-action="Delete" asp-route-id="@booking.UniqueId"
                                        onclick="return confirm('Are you sure you want to delete this booking?');"
                                        class="text-danger me-2" title="Delete">
@@ -91,9 +95,14 @@
                             index++;
                         }
                     }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">No bookings found for selected filters.</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
-
         </div>
     </div>
 </div>
@@ -109,7 +118,7 @@
             $('#tblBookings').DataTable({
                 pageLength: 10,
                 ordering: true,
-                order: [[1, 'asc']], // Sort by Customer Name column (0 = #, 1 = Name)
+                order: [[3, 'desc']], // Sort by Booking Date
                 language: {
                     search: "🔍 Search bookings:",
                     emptyTable: "No bookings found for selected filters."
@@ -120,5 +129,4 @@
             });
         });
     </script>
-
 }
