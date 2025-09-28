@@ -6,8 +6,6 @@
     ViewBag.ActiveTabName = "Booking";
     var services = ViewBag.Services as List<BookingAppAPI.DB.Services>;
     var selectedFilter = ViewBag.Filter as string;
-    var services = ViewBag.Services as List<BookingAppAPI.DB.Services> ?? new();
-    var selectedFilter = ViewBag.Filter as string ?? string.Empty;
     var selectedServiceId = ViewBag.ServiceId as int?;
 }
 
@@ -114,21 +112,31 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
     <script>
         $(document).ready(function () {
-            $('#tblBookings').DataTable({
+            var table = $('#tblBookings').DataTable({
                 pageLength: 10,
                 ordering: true,
-                order: [[3, 'desc']], // Sort by Booking Date
+                order: [[1, 'asc']], // Customer Name (A-Z)
                 language: {
                     search: "🔍 Search bookings:",
                     emptyTable: "No bookings found for selected filters."
                 },
                 columnDefs: [
-                    { targets: [0, 2, 3], className: 'text-center' }
+                    { targets: [0, 2, 3], className: 'text-center' },
+                    { targets: 0, orderable: false } // # column not sortable
                 ]
             });
+
+            // Auto numbering for index column (#)
+            table.on('order.dt search.dt draw.dt', function () {
+                let i = 1;
+                table.cells(null, 0, { search: 'applied', order: 'applied' }).every(function () {
+                    this.data(i++);
+                });
+            }).draw();
         });
     </script>
+
+
 }
