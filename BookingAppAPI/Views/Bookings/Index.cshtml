@@ -3,7 +3,9 @@
 @{
     ViewData["Title"] = "All Bookings";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-     ViewBag.ActiveTabName = "Booking";
+    ViewBag.ActiveTabName = "Booking";
+    var services = ViewBag.Services as List<BookingAppAPI.DB.Services>;
+    var selectedFilter = ViewBag.Filter as string;
     var services = ViewBag.Services as List<BookingAppAPI.DB.Services> ?? new();
     var selectedFilter = ViewBag.Filter as string ?? string.Empty;
     var selectedServiceId = ViewBag.ServiceId as int?;
