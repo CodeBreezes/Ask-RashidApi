@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using BookingAppAPI.ViewModels;
 
 namespace BookingAppAPI.Controllers
 {
@@ -18,7 +19,7 @@ namespace BookingAppAPI.Controllers
             _context = context;
         }
 
-   
+
         public IActionResult Index(string dateFilter, string category)
         {
             var feedbacks = _context.Feedbacks.AsQueryable();
@@ -77,6 +78,40 @@ namespace BookingAppAPI.Controllers
 
             return View(feedbacks.ToList());
         }
+
+        public async Task<IActionResult> FeedbackDetail(int id)
+        {
+            var feedback = await _context.Feedbacks
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (feedback == null) return NotFound();
+
+            // Try fetch user from AppUsers if exists
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.UniqueId == feedback.userId);
+
+            var feedbackVM = new FeedbackViewModel
+            {
+                Id = feedback.Id,
+                Name = feedback.Name ?? "No Name",
+                Email = feedback.Email ?? "No Email",
+                Category = feedback.Category ?? "No Category",
+                Message = feedback.Message ?? "No Message",
+                CreatedDate = feedback.CreatedDate,
+
+                UserId = user?.UniqueId,
+                UserUniqueId = user?.UniqueId,
+                FullName = user?.FullName ?? "No Name",
+                UserEmail = user?.Email,
+                UserPhoneNumber = user?.PhoneNumber,
+                ProfileImageUrl = user?.ProfileImageUrl,
+                Address = user?.Address,
+                DateOfBirth = user?.DateOfBirth,
+                Gender = user?.Gender
+            };
+
+            return View(feedbackVM);
+        }
     }
 
-}
+    }

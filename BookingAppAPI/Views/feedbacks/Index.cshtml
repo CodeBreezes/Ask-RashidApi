@@ -50,6 +50,7 @@
                         <th>Category</th>
                         <th>Message</th>
                         <th>Date</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -64,9 +65,16 @@
                                 <td>@f.Name</td>
                                 <td>@f.Email</td>
                                 <td>@f.Category</td>
-                                <td>@f.Message</td>
+                                <td>
+                                    @(f.Message != null && f.Message.Length > 50 ? f.Message.Substring(0, 50) + "..." : f.Message)
+                                </td>
                                 <td data-order="@uaeDate.ToString("yyyyMMddHHmmss")">
                                     @uaeDate.ToString("dd MMM yyyy, HH:mm")
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="FeedbackDetail" asp-route-id="@f.Id" class="text-primary" title="View Details">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
                                 </td>
                             </tr>
                         }

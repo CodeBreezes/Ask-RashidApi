@@ -1,0 +1,91 @@
+﻿@model BookingAppAPI.ViewModels.FeedbackViewModel
+
+@{
+    ViewData["Title"] = "Feedback Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.ActiveTabName = "Feedback";
+}
+
+<div class="container mt-4">
+    <!-- Feedback Info Card -->
+    <div class="card shadow-sm rounded">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Feedback Info</h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Name</label>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Name) ? "No Name" : Model.Name)</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Email</label>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Email) ? "No Email" : Model.Email)</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Category</label>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Category) ? "No Category" : Model.Category)</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Message</label>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Message) ? "No Message" : Model.Message)</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Submitted On</label>
+                    <div>@Model.CreatedDate.ToString("dd MMM yyyy, HH:mm")</div>
+                </div>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card border-secondary shadow-sm mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">User Info</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-2 text-center mb-3">
+                            <img src="@Url.Content("~/wwwroot/UserProfiles/" + Model.UserUniqueId + "/" + (string.IsNullOrEmpty(Model.ProfileImageUrl) ? "default.jpg" : Model.ProfileImageUrl))"
+                                 onerror="this.onerror=null;this.src='@Url.Content("~/UserProfiles/default.jpg")';"
+                                 class="img-fluid rounded-circle shadow-sm" style="width:120px;" />
+                        </div>
+                        <div class="col-md-10">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Full Name</label>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.FullName) ? "No Name" : Model.FullName)</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Email</label>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.UserEmail) ? "No Email" : Model.UserEmail)</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Phone</label>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.UserPhoneNumber) ? "No Phone" : Model.UserPhoneNumber)</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.Address) ? "No Address" : Model.Address)</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Date of Birth</label>
+                                    <div>@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "No DOB")</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Gender</label>
+                                    <div>@(string.IsNullOrWhiteSpace(Model.Gender) ? "No Gender" : Model.Gender)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- End User Info Card Body -->
+            </div> <!-- End User Info Card -->
+
+        </div>
+    </div>
+
+    <div class="mt-3 text-end">
+        <a asp-action="Feedback" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Back to Feedbacks
+        </a>
+    </div>
+</div>
