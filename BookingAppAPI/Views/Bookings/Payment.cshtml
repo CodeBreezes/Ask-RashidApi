@@ -22,27 +22,21 @@
 
                 <select name="filter" class="form-select form-select-sm me-2">
                     <option value="">-- All Payments --</option>
-
                     @{
                         var options = new Dictionary<string, string>
-                        {
-                            { "today", "Today" },
-                            { "thisWeek", "This Week" },
-                            { "thisMonth", "This Month" },
-                            { "thisYear", "This Year" }
-                        };
+                    {
+                    { "today", "Today" },
+                    { "thisWeek", "This Week" },
+                    { "thisMonth", "This Month" },
+                    { "thisYear", "This Year" }
+                    };
                     }
 
                     @foreach (var opt in options)
                     {
-                        if (filterValue == opt.Key)
-                        {
-                            <option value="@opt.Key" selected>@opt.Value</option>
-                        }
-                        else
-                        {
-                            <option value="@opt.Key">@opt.Value</option>
-                        }
+                        <option value="@opt.Key" selected="@(filterValue == opt.Key ? "selected" : null)">
+                            @opt.Value
+                        </option>
                     }
                 </select>
 
@@ -56,7 +50,6 @@
                     <tr>
                         <th>Sr.No</th>
                         <th>Customer</th>
-                     
                         <th>Phone</th>
                         <th>Amount (AED)</th>
                         <th>Payment Date</th>
@@ -66,16 +59,16 @@
                 </thead>
                 <tbody>
                     @{
-                        var sortedPayments = Model.OrderBy(p => p.CustomerName).ToList();
+                        var sortedPayments = Model.OrderBy(p => p.FullName ?? "").ToList();
                         int index = 1;
 
                         foreach (var p in sortedPayments)
                         {
                             var uaeTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(p.CreatedAt, uaeTimeZone.Id);
+
                             <tr>
                                 <td class="text-center">@index</td>
-                                <td>@(string.IsNullOrWhiteSpace(p.CustomerName) ? "No Name" : p.CustomerName)</td>
-                          
+                                <td>@(string.IsNullOrWhiteSpace(p.FullName) ? "No Name" : p.FullName)</td>
                                 <td>@(string.IsNullOrWhiteSpace(p.UserPhoneNumber) ? "No Phone" : p.UserPhoneNumber)</td>
                                 <td>@p.Amount @p.Currency</td>
                                 <td data-order="@uaeTime.ToString("yyyyMMddHHmmss")">
@@ -90,10 +83,15 @@
                             </tr>
                             index++;
                         }
+
+                        if (!sortedPayments.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No payments found.</td>
+                            </tr>
+                        }
                     }
                 </tbody>
-
-               
             </table>
         </div>
     </div>
@@ -104,21 +102,19 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         $(document).ready(function () {
             var table = $('#tblPayments').DataTable({
-                "pageLength": 10,
-                "ordering": true,
-                "order": [[1, "asc"]], // Sort alphabetically by Customer Name
-                "language": { "search": "🔍 Search payments:" },
-                "columnDefs": [
-                    { "targets": 0, "orderable": false } // Sr.No column not sortable
+                pageLength: 10,
+                ordering: true,
+                order: [[1, "asc"]],
+                language: { search: "🔍 Search payments:" },
+                columnDefs: [
+                    { targets: 0, orderable: false }
                 ]
             });
 
-            // Renumber Sr.No after search, sort, or pagination
             table.on('order.dt search.dt', function () {
                 table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
                     cell.innerHTML = i + 1;

@@ -172,9 +172,17 @@ namespace BookingAppApi.Controllers
         // INDEX: Basic Payments
         // ===============================
 
+     
+
+ 
 
         public IActionResult Payment(string? searchString, string? filter)
         {
+            var now = DateTime.UtcNow;
+            var startOfWeek = now.AddDays(-(int)now.DayOfWeek); // Sunday
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var startOfYear = new DateTime(now.Year, 1, 1);
+
             var paymentsQuery = from p in _context.Payments
                                 join u in _context.AppUsers on p.userId equals u.UniqueId into userGroup
                                 from u in userGroup.DefaultIfEmpty()
@@ -184,12 +192,12 @@ namespace BookingAppApi.Controllers
                                 {
                                     Id = p.Id,
                                     StripePaymentIntentId = string.IsNullOrWhiteSpace(p.StripePaymentIntentId) ? "No Stripe ID" : p.StripePaymentIntentId,
-                                    CustomerName = u != null && !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(p.CustomerName) ? p.CustomerName : "No Name"),
+                                    CustomerName = !string.IsNullOrWhiteSpace(p.CustomerName) ? p.CustomerName : "No Name",
                                     FullName = u != null && !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(p.CustomerName) ? p.CustomerName : "No Name"),
                                     UserId = p.userId,
-                                    UserUniqueId = u.UniqueId ,
-                                    Email = string.IsNullOrWhiteSpace(u.Email) ? "No Record" : u.Email,
-                                    UserPhoneNumber = string.IsNullOrWhiteSpace(u.PhoneNumber) ? "No Phone" : u.PhoneNumber,
+                                    UserUniqueId = u != null ? u.UniqueId : null,
+                                    Email = u != null && !string.IsNullOrWhiteSpace(u.Email) ? u.Email : "No Record",
+                                    UserPhoneNumber = u != null && !string.IsNullOrWhiteSpace(u.PhoneNumber) ? u.PhoneNumber : "No Phone",
                                     ServiceId = p.ServiceId,
                                     ServiceName = s != null && !string.IsNullOrWhiteSpace(s.Name) ? s.Name : "No Service",
                                     AppointmentDate = p.CreatedAt,
@@ -201,34 +209,40 @@ namespace BookingAppApi.Controllers
                                     BookingId = string.IsNullOrWhiteSpace(p.BookingId) ? "No Booking" : p.BookingId
                                 };
 
-            // Optional search filter
+            // Search filter (SQL-translatable)
             if (!string.IsNullOrEmpty(searchString))
             {
+                searchString = searchString.ToLower();
                 paymentsQuery = paymentsQuery.Where(p =>
-                    (p.FullName != null && p.FullName.Contains(searchString)) ||
-                    (p.ServiceName != null && p.ServiceName.Contains(searchString)) ||
-                    (p.BookingId != null && p.BookingId.Contains(searchString))
+                    (p.CustomerName != null && p.CustomerName.ToLower().Contains(searchString)) ||
+                    (p.ServiceName != null && p.ServiceName.ToLower().Contains(searchString)) ||
+                    (p.BookingId != null && p.BookingId.ToLower().Contains(searchString))
                 );
             }
 
-            // Optional date filter
+            // Date filter (SQL-translatable)
             if (!string.IsNullOrEmpty(filter))
             {
-                var now = DateTime.UtcNow;
                 paymentsQuery = filter switch
                 {
                     "today" => paymentsQuery.Where(p => p.CreatedAt.Date == now.Date),
-                    "thisWeek" => paymentsQuery.Where(p => (now - p.CreatedAt).TotalDays <= 7),
-                    "thisMonth" => paymentsQuery.Where(p => p.CreatedAt.Month == now.Month && p.CreatedAt.Year == now.Year),
-                    "thisYear" => paymentsQuery.Where(p => p.CreatedAt.Year == now.Year),
+                    "thisWeek" => paymentsQuery.Where(p => p.CreatedAt >= startOfWeek && p.CreatedAt <= now),
+                    "thisMonth" => paymentsQuery.Where(p => p.CreatedAt >= startOfMonth && p.CreatedAt <= now),
+                    "thisYear" => paymentsQuery.Where(p => p.CreatedAt >= startOfYear && p.CreatedAt <= now),
                     _ => paymentsQuery
                 };
             }
 
+            // Order by a mapped, simple column to avoid EF translation errors
+            paymentsQuery = paymentsQuery.OrderBy(p => p.CustomerName);
+
             var payments = paymentsQuery.ToList();
+
+            ViewBag.Filter = filter;
+            ViewData["CurrentFilter"] = searchString;
+
             return View(payments);
         }
-
 
 
         // ===============================
