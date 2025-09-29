@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookingAppAPI.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ContentController : Controller
     {
         private readonly AppDbContext _context;

@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "All Bookings";
-    Layout = "~/Views/Shared/_SuperLayout.cshtml";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.ActiveTabName = "Booking";
     var services = ViewBag.Services as List<BookingAppAPI.DB.Services>;
     var selectedFilter = ViewBag.Filter as string;

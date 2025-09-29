@@ -7,6 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 
 namespace BookingAppAPI.MvcController
@@ -16,9 +23,11 @@ namespace BookingAppAPI.MvcController
     {
 
         private readonly AppDbContext _context;
-        public UserAccountController(AppDbContext context)
+        private readonly IConfiguration _config;
+        public UserAccountController(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         public IActionResult Index()
@@ -26,33 +35,55 @@ namespace BookingAppAPI.MvcController
             return View();
         }
 
-        public IActionResult AdminLogin()
+        public IActionResult Login()
         {
             return View();
         }
-        public IActionResult Logout()
+      
+        public async Task<IActionResult> Logout()
         {
-            HttpContext.Session.Clear(); 
-            return RedirectToAction("Login", "UserAccount");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Redirect("/UserAccount/Login");
         }
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginVM model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _context.AppUsers
-                .FirstOrDefaultAsync(u => u.LoginEmail == model.LoginName);
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.LoginEmail == model.LoginName);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash) ||
-                user.Roles == null || !user.Roles.Contains("Admin"))
+            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
             {
-                ModelState.AddModelError("", "Invalid Email Id or Password");
+                ModelState.AddModelError(string.Empty, "Invalid login credentials.");
                 return View(model);
             }
 
-            HttpContext.Session.SetString("UserEmail", user.LoginEmail);
-            HttpContext.Session.SetString("UserRole", "Admin");
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.UniqueId.ToString()),
+        new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+        new Claim(ClaimTypes.Email, user.LoginEmail ?? string.Empty)
+    };
+
+            if (user.Roles != null && user.Roles.Any())
+            {
+                foreach (var role in user.Roles)
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
+                });
 
             return RedirectToAction("Index", "Service");
         }
@@ -88,7 +119,7 @@ namespace BookingAppAPI.MvcController
 
             try
             {
-                string email = "askrashid05@gmail.com";
+                string email = "askrashid04@gmail.com";
 
                 var exists = await _context.AppUsers.AnyAsync(u => u.LoginEmail == email);
                 if (exists)

@@ -6,12 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Authorization;
+<<<<<<< Updated upstream
 using BookingAppAPI.ViewModels;
+=======
+using Microsoft.AspNetCore.Authorization;
+>>>>>>> Stashed changes
 
 namespace BookingAppAPI.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class feedbacksController : Controller
     {
         private readonly AppDbContext _context;

@@ -8,10 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using BookingAppAPI.DB;
 using BookingAppAPI.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace BookingAppAPI.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
     [Route("api/[controller]")]
     [ApiController]
     public class BookingsController : ControllerBase

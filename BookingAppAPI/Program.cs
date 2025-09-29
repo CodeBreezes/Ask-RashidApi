@@ -2,6 +2,7 @@ using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
 using Bpst.API.Services.UserAccount;
 using Bpst.API.Swagger;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -9,47 +10,51 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
 using System.Text;
-
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-builder.Services.AddCors(Options =>
-{
-    Options.AddPolicy(name: MyAllowSpecificOrigins,
-        policy =>
-        {
-            policy.WithOrigins("*")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
-builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
-builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(10));
 
-// Add services to the container.
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins, policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opts =>
+    opts.TokenLifespan = TimeSpan.FromHours(10));
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
-    x.TokenValidationParameters = new TokenValidationParameters
+    options.LoginPath = "/UserAccount/Login";
+    options.LogoutPath = "/UserAccount/Logout";
+    options.AccessDeniedPath = "/UserAccount/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidIssuer = config["JwtSettings:Issuer"],
         ValidAudience = config["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey
-            (Encoding.UTF8.GetBytes(config["JwtSettings:Key"]!)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtSettings:Key"]!)),
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateIssuerSigningKey = true
     };
 
-    x.Events = new JwtBearerEvents
+    options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
         {
@@ -60,44 +65,46 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiPolicy", policy =>
+        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+              .RequireAuthenticatedUser());
 
-//Adding Authentication
-builder.Services.AddAuthentication();
+    options.AddPolicy("MvcPolicy", policy =>
+        policy.AddAuthenticationSchemes(CookieAuthenticationDefaults.AuthenticationScheme)
+              .RequireAuthenticatedUser());
+});
 
-
-builder.Services.AddControllers();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
-builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
-             options.UseSqlServer(builder.Configuration.GetConnectionString("LiveConStr")));
+    options.UseSqlServer(config.GetConnectionString("LiveConStr")));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+builder.Services.Configure<StripeSettings>(config.GetSection("Stripe"));
 
 var app = builder.Build();
+
 var stripeSettings = app.Services.GetRequiredService<IConfiguration>()
-                                 .GetSection("Stripe")
-                                 .Get<StripeSettings>();
-
+    .GetSection("Stripe")
+    .Get<StripeSettings>();
 StripeConfiguration.ApiKey = stripeSettings.SecretKey;
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
 
-}
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseCors("AllowAll");
+app.UseRouting();
+app.UseCors(MyAllowSpecificOrigins);
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.UseCors(MyAllowSpecificOrigins);
-
 app.MapControllerRoute(
-     name: "default",
-        pattern: "{controller=Content}/{action=Services}/{id?}");
+    name: "default",
+    pattern: "{controller=UserAccount}/{action=Login}/{id?}");
+
 app.Run();

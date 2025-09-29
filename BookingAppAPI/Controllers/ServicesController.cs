@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Net.Mail;
 using System.Net;
 using Stripe;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace BookingAppAPI.Controllers
 {
@@ -25,7 +26,7 @@ namespace BookingAppAPI.Controllers
         }
 
         // GET: api/Services
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Services>>> GetServices()
         {
@@ -50,8 +51,8 @@ namespace BookingAppAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-        // GET: api/Services/5
-        [Authorize]
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{id}")]
         public async Task<ActionResult<Services>> GetServices(int id)
         {
@@ -67,7 +68,7 @@ namespace BookingAppAPI.Controllers
 
         // PUT: api/Services/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutServices(int id, Services services)
         {
@@ -96,7 +97,7 @@ namespace BookingAppAPI.Controllers
 
             return NoContent();
         }
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost]
         public async Task<ActionResult<Services>> PostServices(Services services)
         {
@@ -142,7 +143,7 @@ namespace BookingAppAPI.Controllers
 
             return Ok(user);
         }
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServices(int id)
         {

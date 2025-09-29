@@ -1,11 +1,13 @@
 ﻿// CONTROLLER: ManageController.cs
 using BookingAppAPI.DB;
 using BookingAppAPI.DB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookingAppAPI.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ManageController : Controller
     {
         private readonly AppDbContext _context;

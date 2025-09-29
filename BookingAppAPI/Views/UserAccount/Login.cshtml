@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Dark Blue/Gray Palette */
+        :root {
+            --color-primary-dark: #1F2937; /* Dark Gray/Blue for body */
+            --color-surface-dark: #111827; /* Even darker for form container */
+            --color-text-light: #F9FAFB;
+            --color-text-secondary: #D1D5DB;
+            --color-input-bg: #374151; /* Medium dark gray for inputs */
+            --color-input-border: #4B5563;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-primary-dark);
+            color: var(--color-text-light);
+        }
+
+        .form-container {
+            /* Deeper surface color for contrast */
+            background-color: var(--color-surface-dark);
+            border: 1px solid #374151; /* Subtle border for definition */
+        }
+
+        .input-field {
+            background-color: var(--color-input-bg);
+            border-color: var(--color-input-border);
+            color: var(--color-text-light);
+            /* Focus ring updated to a vibrant cyan/purple blend for a unique look */
+            transition: all 0.2s ease;
+        }
+
+            .input-field:focus {
+                background-color: #1F2937; /* Slightly darker on focus */
+                border-color: #7C3AED; /* Purple */
+                box-shadow: 0 0 0 2px #111827, 0 0 0 4px #7C3AED; /* Custom ring */
+            }
+
+        .gradient-button {
+            /* More striking and modern gradient */
+            background-image: linear-gradient(to right, #4F46E5, #7C3AED); /* Indigo to Darker Purple */
+            transition: all 0.3s ease;
+            font-weight: 700; /* Bold text for button */
+        }
+
+            .gradient-button:hover {
+                opacity: 1; /* Keep opacity high */
+                transform: translateY(-2px); /* Subtle lift effect */
+                /* More defined, shadow to match the gradient start color */
+                box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 4px 6px -2px rgba(79, 70, 229, 0.2);
+            }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md form-container rounded-xl shadow-2xl p-8 sm:p-10">
+        <div class="text-center mb-10">
+            <img src="/img/logo_.png" alt="Company Logo" class="h-16 w-16 mx-auto mb-4 filter invert">
+            <h2 class="text-4xl font-extrabold tracking-tight text-white">
+                Admin Portal
+            </h2>
+            <p class="text-gray-400 mt-2">Sign in for secure administrative access</p>
+        </div>
+
+        <form action="/UserAccount/Login" method="post" class="space-y-6">
+            @Html.AntiForgeryToken()
+
+            <div class="relative">
+                <label for="LoginName" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <div class="absolute top-1/2 -mt-0.5 transform -translate-y-1/2 left-0 pl-3 pt-6 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <input type="email"
+                       id="LoginName"
+                       name="LoginName"
+                       required
+                       autocomplete="email"
+                       placeholder="admin@example.com"
+                       class="w-full pl-10 pr-4 py-3 border rounded-lg placeholder-gray-500 focus:outline-none input-field">
+            </div>
+
+            <div class="relative">
+                <label for="Password" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                <div class="absolute top-1/2 -mt-0.5 transform -translate-y-1/2 left-0 pl-3 pt-6 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <input type="password"
+                       id="Password"
+                       name="Password"
+                       required
+                       autocomplete="current-password"
+                       placeholder="********"
+                       class="w-full pl-10 pr-4 py-3 border rounded-lg placeholder-gray-500 focus:outline-none input-field">
+            </div>
+
+            <div class="flex items-center justify-between text-sm pt-2">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-indigo-500 bg-gray-600 rounded border-gray-500 focus:ring-indigo-500">
+                    <label for="remember-me" class="ml-2 block text-gray-400">Remember me</label>
+                </div>
+               
+            </div>
+
+            <div>
+                <button type="submit"
+                        class="w-full py-3 rounded-xl text-lg font-semibold text-white gradient-button focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 shadow-lg">
+                    Secure Sign In
+                </button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

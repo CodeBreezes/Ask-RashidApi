@@ -11,9 +11,11 @@ using Microsoft.CodeAnalysis.Host.Mef;
 using BookingAppAPI.DB.Models;
 using System.Net.Mail;
 using System.Net;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookingAppAPI.MvcController
 {
+   
     public class ServiceController : Controller
     {
         private readonly AppDbContext _context;
@@ -22,14 +24,13 @@ namespace BookingAppAPI.MvcController
         {
             _context = context;
         }
-
-        // GET: Service
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.Services.ToListAsync());
         }
 
-        // GET: Service/Details/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -46,16 +47,14 @@ namespace BookingAppAPI.MvcController
 
             return View(services);
         }
-
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(int id = 0)
         {
             Services service;
 
             if (id != 0)
             {
-                service = await _context.Services
-                    .Include(s => s.Subtopics)
-                        .ThenInclude(st => st.Bulletins)
+                service = await _context.Services.Include(s => s.Subtopics).ThenInclude(st => st.Bulletins)
                     .FirstOrDefaultAsync(s => s.UniqueId == id);
 
                 if (service == null)
@@ -108,7 +107,7 @@ namespace BookingAppAPI.MvcController
 
             return View(viewModel);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ServiceFullViewModel vm)
@@ -184,8 +183,7 @@ namespace BookingAppAPI.MvcController
         }
 
 
-
-        // GET: Services/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -199,8 +197,7 @@ namespace BookingAppAPI.MvcController
 
             return View(service);
         }
-
-        // POST: Services/Delete/5
+        [Authorize(Roles = "Admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
