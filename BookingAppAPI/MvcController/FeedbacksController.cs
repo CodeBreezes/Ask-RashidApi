@@ -24,33 +24,46 @@ namespace BookingAppAPI.Controllers
         {
             var feedbacks = _context.Feedbacks.AsQueryable();
 
-            // Apply date filter
+            // UAE time zone
             var uaeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
             var nowUae = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, uaeTimeZone);
 
+            // Compute UTC range for filtering (SQL-translatable)
+            DateTime startUtc;
+            DateTime endUtc;
+
             if (!string.IsNullOrEmpty(dateFilter))
             {
-                if (dateFilter == "today")
+                switch (dateFilter)
                 {
-                    feedbacks = feedbacks.Where(f =>
-                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Date == nowUae.Date);
-                }
-                else if (dateFilter == "thisWeek")
-                {
-                    var startOfWeek = nowUae.AddDays(-(int)nowUae.DayOfWeek);
-                    feedbacks = feedbacks.Where(f =>
-                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone) >= startOfWeek);
-                }
-                else if (dateFilter == "thisMonth")
-                {
-                    feedbacks = feedbacks.Where(f =>
-                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Month == nowUae.Month &&
-                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Year == nowUae.Year);
-                }
-                else if (dateFilter == "thisYear")
-                {
-                    feedbacks = feedbacks.Where(f =>
-                        TimeZoneInfo.ConvertTimeFromUtc(f.CreatedDate, uaeTimeZone).Year == nowUae.Year);
+                    case "today":
+                        startUtc = TimeZoneInfo.ConvertTimeToUtc(nowUae.Date, uaeTimeZone);
+                        endUtc = TimeZoneInfo.ConvertTimeToUtc(nowUae.Date.AddDays(1), uaeTimeZone);
+                        feedbacks = feedbacks.Where(f => f.CreatedDate >= startUtc && f.CreatedDate < endUtc);
+                        break;
+
+                    case "thisWeek":
+                        var startOfWeek = nowUae.Date.AddDays(-(int)nowUae.DayOfWeek);
+                        startUtc = TimeZoneInfo.ConvertTimeToUtc(startOfWeek, uaeTimeZone);
+                        endUtc = TimeZoneInfo.ConvertTimeToUtc(startOfWeek.AddDays(7), uaeTimeZone);
+                        feedbacks = feedbacks.Where(f => f.CreatedDate >= startUtc && f.CreatedDate < endUtc);
+                        break;
+
+                    case "thisMonth":
+                        var startOfMonth = new DateTime(nowUae.Year, nowUae.Month, 1);
+                        var startOfNextMonth = startOfMonth.AddMonths(1);
+                        startUtc = TimeZoneInfo.ConvertTimeToUtc(startOfMonth, uaeTimeZone);
+                        endUtc = TimeZoneInfo.ConvertTimeToUtc(startOfNextMonth, uaeTimeZone);
+                        feedbacks = feedbacks.Where(f => f.CreatedDate >= startUtc && f.CreatedDate < endUtc);
+                        break;
+
+                    case "thisYear":
+                        var startOfYear = new DateTime(nowUae.Year, 1, 1);
+                        var startOfNextYear = startOfYear.AddYears(1);
+                        startUtc = TimeZoneInfo.ConvertTimeToUtc(startOfYear, uaeTimeZone);
+                        endUtc = TimeZoneInfo.ConvertTimeToUtc(startOfNextYear, uaeTimeZone);
+                        feedbacks = feedbacks.Where(f => f.CreatedDate >= startUtc && f.CreatedDate < endUtc);
+                        break;
                 }
             }
 
@@ -63,11 +76,11 @@ namespace BookingAppAPI.Controllers
             // Date filter dropdown
             ViewBag.DateFilterOptions = new SelectList(new[]
             {
-            new { Value = "today", Text = "Today" },
-            new { Value = "thisWeek", Text = "This Week" },
-            new { Value = "thisMonth", Text = "This Month" },
-            new { Value = "thisYear", Text = "This Year" }
-        }, "Value", "Text", dateFilter);
+        new { Value = "today", Text = "Today" },
+        new { Value = "thisWeek", Text = "This Week" },
+        new { Value = "thisMonth", Text = "This Month" },
+        new { Value = "thisYear", Text = "This Year" }
+    }, "Value", "Text", dateFilter);
 
             // Category filter dropdown
             var categories = _context.Feedbacks
@@ -78,6 +91,7 @@ namespace BookingAppAPI.Controllers
 
             return View(feedbacks.ToList());
         }
+
 
         public async Task<IActionResult> FeedbackDetail(int id)
         {
