@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "All Bookings";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    Layout = "~/Views/Shared/_SuperLayout.cshtml";
     ViewBag.ActiveTabName = "Booking";
     var services = ViewBag.Services as List<BookingAppAPI.DB.Services>;
     var selectedFilter = ViewBag.Filter as string;
@@ -59,7 +59,7 @@
                     <tr>
                         <th>#</th>
                         <th>Customer Name</th>
-                        <th>Service</th>
+                        <th>Service Name</th>
                         <th>Booking Date</th>
                         <th>Topic</th>
                         <th>Notes</th>
@@ -79,8 +79,12 @@
                                 <td data-order="@booking.StartedDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd")">
                                     @booking.StartedDate.ToString("dd MMM yyyy")
                                 </td>
-                                <td>@booking.Topic</td>
-                                <td>@booking.Notes</td>
+                                <td>
+                                    @(booking.Topic != null && booking.Topic.Length > 20 ? booking.Topic.Substring(0, 20) + "..." : booking.Topic)
+                                </td>
+                                <td>
+                                    @(booking.Notes != null && booking.Notes.Length > 20 ? booking.Notes.Substring(0, 20) + "..." : booking.Notes)
+                                </td>
                                 <td class="text-end">
                                     <a asp-action="Details" asp-route-id="@booking.UniqueId" class="text-primary me-2" title="View">
                                         <i class="fa fa-eye"></i>
